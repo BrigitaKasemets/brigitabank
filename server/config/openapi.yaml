@@ -1,0 +1,881 @@
+openapi: 3.0.0
+info:
+  title: BrigitaBank API
+  description: API for BrigitaBank online banking application
+  version: 1.0.0
+
+servers:
+  - url: /
+
+tags:
+  - name: users
+    description: User management operations
+  - name: accounts
+    description: Account management operations
+  - name: transactions
+    description: Transaction operations
+  - name: sessions
+    description: Authentication session operations
+  - name: banks
+    description: Bank-to-bank operations
+
+paths:
+  # User endpoints
+  /users:
+    get:
+      tags:
+        - users
+      summary: Get all users
+      description: Retrieve a list of all users
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags:
+        - users
+      summary: Create a new user
+      description: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+        '400':
+          description: Invalid input data
+
+  /users/{userId}:
+    get:
+      tags:
+        - users
+      summary: Get user by ID
+      description: Retrieve a specific user by ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    put:
+      tags:
+        - users
+      summary: Update user
+      description: Update an existing user
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated successfully
+        '400':
+          description: Invalid input data
+        '404':
+          description: User not found
+
+    delete:
+      tags:
+        - users
+      summary: Delete user
+      description: Delete a user
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+
+  # Account endpoints
+  /accounts:
+    get:
+      tags:
+        - accounts
+      summary: Get all accounts
+      description: Retrieve all accounts for the authenticated user
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: A list of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+    post:
+      tags:
+        - accounts
+      summary: Create a new account
+      description: Create a new bank account
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountInput'
+      responses:
+        '201':
+          description: Account created successfully
+        '400':
+          description: Invalid input data
+
+  /accounts/{accountId}:
+    get:
+      tags:
+        - accounts
+      summary: Get account by ID
+      description: Retrieve a specific account by ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          description: Account not found
+
+    put:
+      tags:
+        - accounts
+      summary: Update account
+      description: Update an existing account
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdate'
+      responses:
+        '200':
+          description: Account updated successfully
+        '400':
+          description: Invalid input data
+        '404':
+          description: Account not found
+
+    delete:
+      tags:
+        - accounts
+      summary: Delete account
+      description: Delete an account
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account deleted successfully
+        '404':
+          description: Account not found
+
+  # Transaction endpoints
+  /transactions:
+    get:
+      tags:
+        - transactions
+      summary: Get all transactions
+      description: Retrieve all transactions for the authenticated user
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: A list of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+    post:
+      tags:
+        - transactions
+      summary: Create a new transaction
+      description: Create a new transaction (internal or external)
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '201':
+          description: Transaction created successfully
+        '400':
+          description: Invalid input data
+        '402':
+          description: Insufficient funds
+
+  /transactions/{transactionId}:
+    get:
+      tags:
+        - transactions
+      summary: Get transaction by ID
+      description: Retrieve a specific transaction by ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Transaction not found
+
+    put:
+      tags:
+        - transactions
+      summary: Update transaction
+      description: Update an existing transaction (admin only)
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdate'
+      responses:
+        '200':
+          description: Transaction updated successfully
+        '400':
+          description: Invalid input data
+        '404':
+          description: Transaction not found
+
+    delete:
+      tags:
+        - transactions
+      summary: Delete transaction
+      description: Delete a transaction (admin only)
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Transaction deleted successfully
+        '404':
+          description: Transaction not found
+
+  # Session endpoints
+  /sessions:
+    post:
+      tags:
+        - sessions
+      summary: Create a new session
+      description: Login and create a new authentication session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionInput'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          description: Authentication failed
+
+  /sessions/{sessionId}:
+    delete:
+      tags:
+        - sessions
+      summary: Delete session
+      description: Logout and delete the current session
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session terminated successfully
+        '404':
+          description: Session not found
+
+  # Bank-to-bank endpoints
+  /banks/transactions:
+    post:
+      tags:
+        - banks
+      summary: Process bank-to-bank transaction
+      description: Process a transaction from another bank
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/B2BTransactionInput'
+      responses:
+        '200':
+          description: Transaction processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/B2BTransactionResponse'
+        '400':
+          description: Invalid JWT or signature
+        '404':
+          description: Account not found
+
+  /banks:
+    get:
+      tags:
+        - banks
+      summary: Get all banks
+      description: Retrieve a list of all registered banks
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: A list of banks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bank'
+    post:
+      tags:
+        - banks
+      summary: Register a new bank
+      description: Register a new bank in the system
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankInput'
+      responses:
+        '201':
+          description: Bank registered successfully
+        '400':
+          description: Invalid input data
+
+  /banks/{bankId}:
+    get:
+      tags:
+        - banks
+      summary: Get bank by ID
+      description: Retrieve a specific bank by ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: bankId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bank found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bank'
+        '404':
+          description: Bank not found
+
+    put:
+      tags:
+        - banks
+      summary: Update bank
+      description: Update an existing bank
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: bankId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankUpdate'
+      responses:
+        '200':
+          description: Bank updated successfully
+        '400':
+          description: Invalid input data
+        '404':
+          description: Bank not found
+
+    delete:
+      tags:
+        - banks
+      summary: Delete bank
+      description: Delete a bank
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: bankId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Bank deleted successfully
+        '404':
+          description: Bank not found
+
+  /banks/jwks:
+    get:
+      tags:
+        - banks
+      summary: Get JWKS
+      description: Retrieve the JSON Web Key Set
+      responses:
+        '200':
+          description: JWKS retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - role
+
+    UserInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+
+    UserUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountNumber:
+          type: string
+        name:
+          type: string
+        balance:
+          type: number
+        currency:
+          type: string
+          enum: [EUR, USD, GBP]
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - accountNumber
+        - name
+        - balance
+        - currency
+        - userId
+
+    AccountInput:
+      type: object
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+          enum: [EUR, USD, GBP]
+      required:
+        - name
+        - currency
+
+    AccountUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+          enum: [EUR, USD, GBP]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountFrom:
+          type: string
+        accountTo:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [EUR, USD, GBP]
+        explanation:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, rejected]
+        type:
+          type: string
+          enum: [internal, external]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - accountFrom
+        - accountTo
+        - amount
+        - currency
+        - explanation
+        - status
+        - type
+
+    TransactionInput:
+      type: object
+      properties:
+        accountFrom:
+          type: string
+        accountTo:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [EUR, USD, GBP]
+        explanation:
+          type: string
+      required:
+        - accountFrom
+        - accountTo
+        - amount
+        - currency
+        - explanation
+
+    TransactionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, completed, failed, rejected]
+        explanation:
+          type: string
+
+    Session:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - token
+        - user
+
+    SessionInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+
+    Bank:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        prefix:
+          type: string
+        transactionUrl:
+          type: string
+          format: uri
+        jwksUrl:
+          type: string
+          format: uri
+        owner:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - prefix
+        - transactionUrl
+        - jwksUrl
+        - owner
+
+    BankInput:
+      type: object
+      properties:
+        name:
+          type: string
+        prefix:
+          type: string
+        transactionUrl:
+          type: string
+          format: uri
+        jwksUrl:
+          type: string
+          format: uri
+        owner:
+          type: string
+      required:
+        - name
+        - prefix
+        - transactionUrl
+        - jwksUrl
+        - owner
+
+    BankUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        transactionUrl:
+          type: string
+          format: uri
+        jwksUrl:
+          type: string
+          format: uri
+        owner:
+          type: string
+
+    B2BTransactionInput:
+      type: object
+      properties:
+        jwt:
+          type: string
+      required:
+        - jwt
+
+    B2BTransactionResponse:
+      type: object
+      properties:
+        receiverName:
+          type: string
+      required:
+        - receiverName
+
+    JWKS:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              kty:
+                type: string
+                description: "The key type (e.g., RSA, EC)"
+              kid:
+                type: string
+                description: "Key ID, used to match the key with the signature"
+              use:
+                type: string
+                description: "The intended use of the key (e.g., sig for signing)"
+              alg:
+                type: string
+                description: "The algorithm used with the key (e.g., RS256)"
+              n:
+                type: string
+                description: "The modulus for RSA keys (used with kty: RSA)"
+              e:
+                type: string
+                description: "The exponent for RSA keys (used with kty: RSA)"
+              x5c:
+                type: array
+                items:
+                  type: string
+                description: "X.509 certificate chain, base64 encoded"
+              x5t:
+                type: string
+                description: "X.509 certificate thumbprint (SHA-1)"
+              "x5t#S256":
+                type: string
+                description: "X.509 certificate thumbprint (SHA-256)"
+            required:
+              - kty
+              - kid
+              - use
+              - alg
+              - n
+              - e
+      required:
+        - keys

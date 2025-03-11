@@ -83,13 +83,13 @@ app.use((req, res) => {
 
 // Sync database models (in development mode only)
 if (process.env.NODE_ENV === 'development') {
-  sequelize.sync({ alter: true })
-    .then(() => {
-      console.log('Database synced');
-    })
-    .catch(err => {
-      console.error('Error syncing database:', err);
-    });
+ // sequelize.sync({ alter: true })
+  //  .then(() => {
+  //    console.log('Database synced');
+   // })
+   // .catch(err => {
+  //   console.error('Error syncing database:', err);
+   // });
 }
 
 // Pordi seadistamine
