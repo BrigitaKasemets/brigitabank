@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: /
+  - url: /api
 
 tags:
   - name: users
@@ -51,9 +51,20 @@ paths:
               $ref: '#/components/schemas/UserInput'
       responses:
         '201':
-          description: User created successfully
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User registered successfully
         '400':
-          description: Invalid input data
+          $ref: '#/components/responses/ValidationError'
 
   /users/{userId}:
     get:
@@ -69,6 +80,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: User found
@@ -92,6 +104,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -119,6 +132,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '204':
           description: User deleted successfully
@@ -176,6 +190,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: Account found
@@ -199,6 +214,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -226,6 +242,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '204':
           description: Account deleted successfully
@@ -285,6 +302,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: Transaction found
@@ -308,6 +326,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -335,18 +354,19 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '204':
           description: Transaction deleted successfully
         '404':
           description: Transaction not found
 
-  # Session endpoints
+    # Session endpoints
   /sessions:
     post:
       tags:
         - sessions
-      summary: Create a new session
+      summary: Login user
       description: Login and create a new authentication session
       requestBody:
         required: true
@@ -355,14 +375,36 @@ paths:
             schema:
               $ref: '#/components/schemas/SessionInput'
       responses:
-        '201':
-          description: Session created successfully
+        '200':
+          description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      username:
+                        type: string
+                      fullName:
+                        type: string
         '401':
-          description: Authentication failed
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+
 
   /sessions/{sessionId}:
     delete:
@@ -390,7 +432,7 @@ paths:
       tags:
         - banks
       summary: Process bank-to-bank transaction
-      description: Process a transaction from another bank
+      description: Process a transaction from another bank. This endpoint receives a JWT containing the transaction details including accountFrom, accountTo, amount, currency, explanation.
       security:
         - BearerAuth: [ ]
       requestBody:
@@ -461,6 +503,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: Bank found
@@ -484,6 +527,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -511,6 +555,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '204':
           description: Bank deleted successfully
@@ -522,7 +567,7 @@ paths:
       tags:
         - banks
       summary: Get JWKS
-      description: Retrieve the JSON Web Key Set
+      description: Retrieve the JSON Web Key Set containing the bank's public key(s) used for validating transaction JWT signatures
       responses:
         '200':
           description: JWKS retrieved successfully
@@ -545,13 +590,10 @@ components:
         id:
           type: string
           format: uuid
-        firstName:
+        username:
           type: string
-        lastName:
+        fullName:
           type: string
-        email:
-          type: string
-          format: email
         role:
           type: string
           enum: [user, admin]
@@ -563,45 +605,40 @@ components:
           format: date-time
       required:
         - id
-        - firstName
-        - lastName
-        - email
+        - username
+        - fullName
         - role
 
     UserInput:
       type: object
       properties:
-        firstName:
+        username:
           type: string
-        lastName:
+          example: user@brigitabank.com
+        fullName:
           type: string
-        email:
-          type: string
-          format: email
+          example: Demo Kasutaja
         password:
           type: string
           format: password
           minLength: 8
+          example: user123
       required:
-        - firstName
-        - lastName
-        - email
+        - username
+        - fullName
         - password
 
     UserUpdate:
       type: object
       properties:
-        firstName:
+        fullName:
           type: string
-        lastName:
-          type: string
-        email:
-          type: string
-          format: email
         password:
           type: string
           format: password
           minLength: 8
+        username:
+          type: string
 
     Account:
       type: object
@@ -739,14 +776,15 @@ components:
     SessionInput:
       type: object
       properties:
-        email:
+        username:
           type: string
-          format: email
+          example: user@brigitabank.com
         password:
           type: string
           format: password
+          example: user123
       required:
-        - email
+        - username
         - password
 
     Bank:
@@ -822,6 +860,7 @@ components:
       properties:
         jwt:
           type: string
+          description: JSON Web Token containing the transaction details signed by the source bank
       required:
         - jwt
 
@@ -830,6 +869,7 @@ components:
       properties:
         receiverName:
           type: string
+          description: Full name of the receiving account owner
       required:
         - receiverName
 
@@ -879,3 +919,38 @@ components:
               - e
       required:
         - keys
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: error
+              message:
+                type: string
+                example: Authentication required
+
+    ValidationError:
+      description: Input validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: error
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string

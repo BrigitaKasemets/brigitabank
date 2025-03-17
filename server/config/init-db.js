@@ -1,3 +1,4 @@
+// server/config/init-db.js
 require('dotenv').config();
 const { sequelize } = require('./db');
 const User = require('../models/User');
@@ -13,22 +14,18 @@ const initializeDatabase = async () => {
     console.log('Kõik andmebaasi tabelid on edukalt loodud');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = await User.create({
-      firstName: 'Admin',
-      lastName: 'User',
-      email: 'admin@brigitabank.com',
-      password: adminPassword,
+      fullName: 'Admin Kasutaja',
+      username: 'admin@brigitabank.com',
+      password: 'admin123',
       role: 'admin'
     });
 
-    // Create demo user
-    const userPassword = await bcrypt.hash('user123', 10);
+    // Create demo user - don't hash password manually
     const user = await User.create({
-      firstName: 'Demo',
-      lastName: 'User',
-      email: 'user@brigitabank.com',
-      password: userPassword,
+      fullName: 'Demo Kasutaja',
+      username: 'user@brigitabank.com',
+      password: 'user123',  // Raw password, hook will hash it
       role: 'user'
     });
 
@@ -51,8 +48,8 @@ const initializeDatabase = async () => {
     await Bank.create({
       prefix: 'ABC',
       name: 'Brigita Bank',
-      transactionUrl: 'http://localhost:3000/transactions/b2b',
-      jwksUrl: 'http://localhost:3000/transactions/jwks',
+      transactionUrl: 'http://localhost:3001/transactions/b2b',
+      jwksUrl: 'http://localhost:3001/transactions/jwks',
       apiKey: 'brigitabank-api-key'
     });
 
@@ -73,8 +70,8 @@ const initializeDatabase = async () => {
       amount: 100,
       currency: 'EUR',
       explanation: 'Demo tehing',
-      senderName: `${user.firstName} ${user.lastName}`,
-      receiverName: `${user.firstName} ${user.lastName}`,
+      senderName: `${user.fullName}`,
+      receiverName: `${user.fullName}`,
       status: 'completed',
       type: 'internal'
     });

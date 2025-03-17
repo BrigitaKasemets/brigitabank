@@ -50,11 +50,11 @@ exports.createInternalTransaction = async (req, res) => {
 
     // Saaja nimi
     const toUser = await User.findByPk(toAccount.userId, { transaction: t });
-    const receiverName = `${toUser.firstName} ${toUser.lastName}`;
+    const receiverName = `${toUser.fullName}`;
 
     // Saatja nimi
     const fromUser = await User.findByPk(fromAccount.userId, { transaction: t });
-    const senderName = `${fromUser.firstName} ${fromUser.lastName}`;
+    const senderName = `${fromUser.fullName}`;
 
     // Loo transaktsioon
     const transaction = await Transaction.create({
@@ -135,7 +135,7 @@ exports.createExternalTransaction = async (req, res) => {
 
     // Saatja nimi
     const fromUser = await User.findByPk(fromAccount.userId, { transaction: t });
-    const senderName = `${fromUser.firstName} ${fromUser.lastName}`;
+    const senderName = `${fromUser.fullName}`;
 
     // Loo esialgne tehing ootel staatusega
     const transaction = await Transaction.create({

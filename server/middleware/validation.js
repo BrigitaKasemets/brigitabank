@@ -11,21 +11,20 @@ exports.validateRequest = (req, res, next) => {
 
 // Registreerimise valideerimisreeglid
 exports.registerValidation = [
-  check('firstName', 'Eesnimi on kohustuslik').not().isEmpty(),
-  check('lastName', 'Perekonnanimi on kohustuslik').not().isEmpty(),
-  check('email', 'Palun sisestage korrektne e-posti aadress').isEmail(),
-  check('password', 'Parool peab olema vähemalt 6 tähemärki pikk').isLength({ min: 6 })
+  check('fullName', 'Ees- ja perekonnanimi on kohustuslikud').not().isEmpty(),
+  check('username', 'Kasutajanimi on kohustuslik').not().isEmpty(),
+  check('password', 'Parool peab olema vï¿½hemalt 6 tï¿½hemï¿½rki pikk').isLength({ min: 6 })
 ];
 
 // Sisselogimise valideerimisreeglid
 exports.loginValidation = [
-  check('email', 'Palun sisestage korrektne e-posti aadress').isEmail(),
+  check('username', 'Palun sisestage korrektne kasutajanimi').not().isEmpty(),
   check('password', 'Parool on kohustuslik').exists()
 ];
 
 // Konto loomise valideerimisreeglid
 exports.accountValidation = [
-  check('currency', 'Valuuta peab olema kas EUR, USD või GBP').isIn(['EUR', 'USD', 'GBP'])
+  check('currency', 'Valuuta peab olema kas EUR, USD vï¿½i GBP').isIn(['EUR', 'USD', 'GBP'])
 ];
 
 // Tehingu valideerimisreeglid
@@ -33,6 +32,6 @@ exports.transactionValidation = [
   check('accountFrom', 'Saatja konto number on kohustuslik').not().isEmpty(),
   check('accountTo', 'Saaja konto number on kohustuslik').not().isEmpty(),
   check('amount', 'Summa peab olema positiivne arv').isFloat({ gt: 0 }),
-  check('currency', 'Valuuta peab olema kas EUR, USD või GBP').isIn(['EUR', 'USD', 'GBP']),
+  check('currency', 'Valuuta peab olema kas EUR, USD vï¿½i GBP').isIn(['EUR', 'USD', 'GBP']),
   check('explanation', 'Selgitus on kohustuslik').not().isEmpty()
 ];

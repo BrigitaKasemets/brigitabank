@@ -3,9 +3,18 @@ const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/db');
 
 class User extends Model {
-  // Parooli võrdlemise meetod
-  async comparePassword(password) {
-    return await bcrypt.compare(password, this.password);
+  // Password comparison method
+  async comparePassword(candidatePassword) {
+    try {
+      // Add logging to debug
+      console.log('Comparing password...');
+      const isMatch = await bcrypt.compare(candidatePassword, this.password);
+      console.log('Password match result:', isMatch);
+      return isMatch;
+    } catch (error) {
+      console.error('Error comparing passwords:', error);
+      return false;
+    }
   }
 }
 
@@ -15,21 +24,13 @@ User.init({
     primaryKey: true,
     autoIncrement: true
   },
-  firstName: {
+  fullName: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  lastName: {
+  username: {
     type: DataTypes.STRING,
     allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      isEmail: true
-    }
   },
   password: {
     type: DataTypes.STRING,

@@ -94,7 +94,7 @@ exports.handleIncomingTransaction = async (req, res) => {
 
     // Hangi saaja nimi
     const toUser = await User.findByPk(toAccount.userId, { transaction: t });
-    const receiverName = `${toUser.firstName} ${toUser.lastName}`;
+    const receiverName = `${toUser.fullName}`;
 
     // Loo tehingu kirje
     await Transaction.create({

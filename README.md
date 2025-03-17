@@ -42,7 +42,7 @@ A simple online banking application with features for managing accounts and perf
 3. Create a `.env` file with the following variables (or use the existing one):
    ```
    NODE_ENV=development
-   PORT=3000
+   PORT=3001
    JWT_SECRET=your_secret_key
    BANK_PREFIX=ABC
    TEST_MODE=true
@@ -60,14 +60,14 @@ A simple online banking application with features for managing accounts and perf
 
 6. Open your browser and navigate to:
    ```
-   http://localhost:3000
+   http://localhost:3001
    ```
 
 ## API Documentation
 
 The API documentation is available at `/api-docs` endpoint:
 ```
-http://localhost:3000/api-docs
+http://localhost:3001/api-docs
 ```
 
 ## Demo Accounts
@@ -75,9 +75,9 @@ http://localhost:3000/api-docs
 After running the initialization script, the following demo accounts will be available:
 
 - **Admin User**:
-  - Email: admin@brigitabank.com
+  - username: admin@brigitabank.com
   - Password: admin123
 
 - **Regular User**:
-  - Email: user@brigitabank.com
+  - username: user@brigitabank.com
   - Password: user123

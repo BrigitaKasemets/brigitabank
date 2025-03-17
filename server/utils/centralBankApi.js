@@ -1,36 +1,42 @@
-// Mocking node-fetch for CommonJS compatibility
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-// Keskpanga matkimine testimiseks
-const TEST_MODE = process.env.TEST_MODE === 'true';
-
-// Testimiseks mõeldud pankade andmed
+// Mock data for testing
 const mockBanks = {
   'ABC': {
     prefix: 'ABC',
-    name: 'Alpha Bank',
-    transactionUrl: 'http://localhost:3000/transactions/b2b',
-    jwksUrl: 'http://localhost:3000/transactions/jwks',
-    apiKey: 'abc-api-key',
+    name: 'Brigita Bank',
+    transactionUrl: 'http://localhost:3001/api/banks/transactions',
+    jwksUrl: 'http://localhost:3001/api/banks/jwks',
+    apiKey: 'mock-brigita-api-key',
+    status: 'active'
   },
   'XYZ': {
     prefix: 'XYZ',
     name: 'XYZ Bank',
-    transactionUrl: 'http://localhost:3001/transactions/b2b',
-    jwksUrl: 'http://localhost:3001/transactions/jwks',
-    apiKey: 'xyz-api-key',
+    transactionUrl: 'http://localhost:3002/api/banks/transactions',
+    jwksUrl: 'http://localhost:3002/api/banks/jwks',
+    apiKey: 'mock-xyz-api-key',
+    status: 'active'
   },
+  'TEST': {
+    prefix: 'TEST',
+    name: 'Test Bank',
+    transactionUrl: 'http://localhost:3003/api/banks/transactions',
+    jwksUrl: 'http://localhost:3003/api/banks/jwks',
+    apiKey: 'mock-test-api-key',
+    status: 'active'
+  }
 };
 
-// Panga info hankimine prefiksi järgi
+// Get bank information from central bank by prefix
 exports.getBankByPrefix = async (prefix) => {
-  try {
-    // Testimisrežiimis kasuta mock andmeid
-    if (TEST_MODE) {
-      return mockBanks[prefix] || null;
-    }
+  // If in test mode, return mock data
+  if (process.env.TEST_MODE === 'true') {
+    console.log(`[TEST_MODE] Getting mock bank info for prefix: ${prefix}`);
+    return mockBanks[prefix] || null;
+  }
 
-    // Päris režiimis küsi keskpangast
+  try {
     const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks/${prefix}`, {
       headers: {
         'X-API-Key': process.env.CENTRAL_BANK_API_KEY
@@ -38,44 +44,79 @@ exports.getBankByPrefix = async (prefix) => {
     });
 
     if (!response.ok) {
+      console.error(`Error getting bank info: ${response.status}`);
       return null;
     }
 
     return await response.json();
   } catch (err) {
-    console.error('Keskpanga API viga:', err.message);
+    console.error('Central Bank API error:', err.message);
     return null;
   }
 };
 
-// Panga registreerimine keskpangas
+// Register bank with central bank
 exports.registerBank = async (bankData) => {
-  try {
-    // Testimisrežiimis imiteeri edukat registreerimist
-    if (TEST_MODE) {
-      return {
-        success: true,
-        apiKey: 'mock-api-key-' + Math.random().toString(36).substring(2, 10)
-      };
-    }
+  // If in test mode, return mock response
+  if (process.env.TEST_MODE === 'true') {
+    console.log(`[TEST_MODE] Registering mock bank: ${bankData.name}`);
+    const mockResponse = {
+      ...bankData,
+      apiKey: `mock-${bankData.prefix.toLowerCase()}-api-key`,
+      status: 'active'
+    };
 
-    // Päris režiimis registreeri keskpangas
+    // Add to mock banks for future reference
+    mockBanks[bankData.prefix] = mockResponse;
+
+    return mockResponse;
+  }
+
+  try {
     const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-API-Key': process.env.CENTRAL_BANK_API_KEY
       },
       body: JSON.stringify(bankData)
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.msg || 'Registreerimine ebaõnnestus');
+      throw new Error(errorData.message || 'Registration failed');
     }
 
     return await response.json();
   } catch (err) {
-    console.error('Panga registreerimise viga:', err.message);
+    console.error('Bank registration error:', err.message);
     throw err;
+  }
+};
+
+// Get all banks from central bank
+exports.getAllBanks = async () => {
+  // If in test mode, return mock data
+  if (process.env.TEST_MODE === 'true') {
+    console.log('[TEST_MODE] Getting all mock banks');
+    return Object.values(mockBanks);
+  }
+
+  try {
+    const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks`, {
+      headers: {
+        'X-API-Key': process.env.CENTRAL_BANK_API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`Error getting banks: ${response.status}`);
+      return [];
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Central Bank API error:', err.message);
+    return [];
   }
 };
