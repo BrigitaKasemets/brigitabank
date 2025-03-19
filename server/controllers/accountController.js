@@ -1,7 +1,6 @@
 const Account = require('../models/Account');
 const User = require('../models/User');
 
-// Create a new account
 exports.createAccount = async (req, res) => {
   try {
     const { name, currency } = req.body;
@@ -13,11 +12,13 @@ exports.createAccount = async (req, res) => {
     // Generate account number with bank prefix
     const accountNumber = Account.generateAccountNumber(bankPrefix);
 
+    // Create new account with the generated account number
     const account = await Account.create({
       accountNumber,
-      userId,
       name,
-      currency
+      currency,
+      userId,
+      balance: 0.00
     });
 
     res.status(201).json(account);
