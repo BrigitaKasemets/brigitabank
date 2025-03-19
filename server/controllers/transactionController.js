@@ -6,8 +6,6 @@ const centralBankApi = require('../utils/centralBankApi');
 const jwtUtils = require('../utils/jwtUtils');
 const { sequelize } = require('../config/db');
 
-// Add/update these functions in transactionController.js
-
 // Internal transaction (within the same bank)
 exports.createInternalTransaction = async (req, res) => {
   const t = await sequelize.transaction();
@@ -18,7 +16,6 @@ exports.createInternalTransaction = async (req, res) => {
     // Check sender account
     const fromAccount = await Account.findOne({
       where: { accountNumber: accountFrom },
-      include: [{ model: User, attributes: ['fullName'] }],
       transaction: t
     });
 
@@ -39,16 +36,29 @@ exports.createInternalTransaction = async (req, res) => {
       return res.status(402).json({ msg: 'Insufficient funds' });
     }
 
+    // Get sender information
+    const sender = await User.findByPk(fromAccount.userId, { transaction: t });
+    if (!sender) {
+      await t.rollback();
+      return res.status(500).json({ msg: 'Sender user not found' });
+    }
+
     // Check receiver account
     const toAccount = await Account.findOne({
       where: { accountNumber: accountTo },
-      include: [{ model: User, attributes: ['fullName'] }],
       transaction: t
     });
 
     if (!toAccount) {
       await t.rollback();
       return res.status(404).json({ msg: 'Recipient account not found' });
+    }
+
+    // Get receiver information
+    const receiver = await User.findByPk(toAccount.userId, { transaction: t });
+    if (!receiver) {
+      await t.rollback();
+      return res.status(500).json({ msg: 'Receiver user not found' });
     }
 
     // Update balances
@@ -68,8 +78,8 @@ exports.createInternalTransaction = async (req, res) => {
       amount: parseFloat(amount),
       currency,
       explanation,
-      senderName: fromAccount.User.fullName,
-      receiverName: toAccount.User.fullName,
+      senderName: sender.fullName,
+      receiverName: receiver.fullName,
       status: 'completed',
       type: 'internal'
     }, { transaction: t });
@@ -93,7 +103,6 @@ exports.createExternalTransaction = async (req, res) => {
     // Check sender account
     const fromAccount = await Account.findOne({
       where: { accountNumber: accountFrom },
-      include: [{ model: User, attributes: ['fullName'] }],
       transaction: t
     });
 
@@ -114,6 +123,13 @@ exports.createExternalTransaction = async (req, res) => {
       return res.status(402).json({ msg: 'Insufficient funds' });
     }
 
+    // Get sender information
+    const sender = await User.findByPk(fromAccount.userId, { transaction: t });
+    if (!sender) {
+      await t.rollback();
+      return res.status(500).json({ msg: 'Sender user not found' });
+    }
+
     // Extract bank prefix from target account
     const targetBankPrefix = accountTo.substring(0, 3);
 
@@ -132,7 +148,7 @@ exports.createExternalTransaction = async (req, res) => {
       amount: parseFloat(amount),
       currency,
       explanation,
-      senderName: fromAccount.User.fullName,
+      senderName: sender.fullName,
       status: 'pending',
       type: 'outgoing'
     }, { transaction: t });
@@ -144,7 +160,7 @@ exports.createExternalTransaction = async (req, res) => {
       amount: parseFloat(amount),
       currency,
       explanation,
-      senderName: fromAccount.User.fullName
+      senderName: sender.fullName
     };
 
     // Create and sign JWT
