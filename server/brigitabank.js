@@ -57,7 +57,6 @@ app.use('/api/transactions', transactionsRoutes);
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/banks', banksRoutes);
 app.use('/transactions/b2b', b2bRoutes);
-app.get('/transactions/jwks', b2bRoutes); // JWKS endpoint for external banks
 
 // JWKS endpoint (separate from banks routes)
 app.get('/transactions/jwks', (req, res) => {

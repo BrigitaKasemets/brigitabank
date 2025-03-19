@@ -1,80 +1,65 @@
 const Account = require('../models/Account');
 const User = require('../models/User');
 
-// Loo uus konto
+// Create a new account
 exports.createAccount = async (req, res) => {
   try {
-    const { currency, name } = req.body; // Extract name from request
-    const bankPrefix = process.env.BANK_PREFIX || 'ABC';
+    const { name, currency } = req.body;
+    const userId = req.user.id;
 
-    // Generate account number
+    // Get bank prefix from environment variables
+    const bankPrefix = process.env.BANK_PREFIX;
+
+    // Generate account number with bank prefix
     const accountNumber = Account.generateAccountNumber(bankPrefix);
 
-    // Create new account with name
     const account = await Account.create({
       accountNumber,
-      userId: req.user.id,
-      currency: currency || 'EUR',
-      name: name || `${currency || 'EUR'} Account`, // Default name if not provided
+      userId,
+      name,
+      currency
     });
 
     res.status(201).json(account);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Serveri viga - konto loomine ebaõnnestus', err: err.message });
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Kasutaja kontode nimekiri
+// Get user's accounts
 exports.getMyAccounts = async (req, res) => {
   try {
-    const accounts = await Account.findAll({ 
-      where: { userId: req.user.id },
-      include: [
-        {
-          model: User,
-          attributes: ['fullName']
-        }
-      ]
+    const accounts = await Account.findAll({
+      where: { userId: req.user.id }
     });
-    
     res.json(accounts);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Serveri viga - kontode nimekirja laadimine ebaõnnestus');
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Konto info konto numbri järgi
+// Get account by number
 exports.getAccountByNumber = async (req, res) => {
   try {
-    if (!req.params.accountNumber) {
-      return res.status(400).json({ msg: 'Konto number on vajalik' });
-    }
-
     const account = await Account.findOne({
-      where: { accountNumber: req.params.accountNumber },
-      include: [
-        {
-          model: User,
-          attributes: ['fullName']
-        }
-      ]
+      where: { accountNumber: req.params.accountNumber }
     });
 
     if (!account) {
-      return res.status(404).json({ msg: 'Kontot ei leitud' });
+      return res.status(404).json({ msg: 'Account not found' });
     }
 
-    // Check if this is the user's own account or admin
-    if (account.userId !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ msg: 'Ligipääs keelatud' });
+    // Check if the account belongs to the user
+    if (account.userId !== req.user.id) {
+      return res.status(403).json({ msg: 'Access denied' });
     }
 
     res.json(account);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Serveri viga - konto laadimine ebaõnnestus', err: err.message });
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
@@ -92,18 +77,15 @@ exports.getAccountOwnerName = async (req, res) => {
     });
 
     if (!account) {
-      return res.status(404).json({ msg: 'Kontot ei leitud' });
-    }
-
-    if (!account.User) {
-      return res.status(404).json({ msg: 'Konto omanikku ei leitud' });
+      return res.status(404).json({ msg: 'Account not found' });
     }
 
     res.json({
-      receiverName: account.User.fullName
+      accountNumber: account.accountNumber,
+      ownerName: account.User.fullName
     });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Serveri viga - konto omaniku nime laadimine ebaõnnestus');
+    res.status(500).json({ msg: 'Server error' });
   }
 };

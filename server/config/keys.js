@@ -2,16 +2,17 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-// Kontrolli, kas võtmed juba eksisteerivad
-const keysDir = path.join(__dirname, '..', 'keys');
+// Look for keys in config/keys directory
+const keysDir = path.join(__dirname, 'keys');
 if (!fs.existsSync(keysDir)) {
   fs.mkdirSync(keysDir);
 }
 
+// Match the file extensions used in generateKeys.js
 const privateKeyPath = path.join(keysDir, 'private.pem');
 const publicKeyPath = path.join(keysDir, 'public.pem');
 
-// Genereeri uued võtmed, kui neid pole
+// Generate new keys if they don't exist
 if (!fs.existsSync(privateKeyPath) || !fs.existsSync(publicKeyPath)) {
   console.log('Genereeritakse uued RSA võtmed...');
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -31,33 +32,33 @@ if (!fs.existsSync(privateKeyPath) || !fs.existsSync(publicKeyPath)) {
   console.log('Võtmed genereeritud!');
 }
 
-// Loe võtmed
+// Read keys
 const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
 
 module.exports = {
   privateKey,
   publicKey,
-  // Funktsioon JWKS vormingus avaliku võtme saamiseks
+  // JWKS format public key function
   getJwks: () => {
-    // Ekstrakti PEM vormingus avalik võti
+    // Extract PEM format public key
     const pemHeader = '-----BEGIN PUBLIC KEY-----';
     const pemFooter = '-----END PUBLIC KEY-----';
     const pemContents = publicKey.substring(
-      pemHeader.length,
-      publicKey.length - pemFooter.length - 1
+        pemHeader.length,
+        publicKey.length - pemFooter.length - 1
     ).replace(/\n/g, '');
 
-    // JWKS formaat
+    // JWKS format
     return {
       keys: [
         {
           kty: 'RSA',
           kid: '1', // Key ID
-          use: 'sig', // Allkirjastamise jaoks
+          use: 'sig',
           alg: 'RS256',
           n: Buffer.from(pemContents, 'base64').toString('base64url'), // Modulus
-          e: 'AQAB' // Exponent (65537 standardne)
+          e: 'AQAB' // Exponent (65537 standard)
         }
       ]
     };
