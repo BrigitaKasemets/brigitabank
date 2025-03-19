@@ -489,6 +489,97 @@ paths:
         '400':
           description: Invalid input data
 
+  /banks/register-with-central-bank:
+    post:
+      tags:
+        - banks
+      summary: Register with central bank
+      description: Register this bank with the external central bank system using environment variables
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bank registered successfully with central bank
+                  data:
+                    type: object
+                    properties:
+                      prefix:
+                        type: string
+                        example: fbb
+        '500':
+          description: Registration failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Registration failed
+
+  /banks/external:
+    get:
+      tags:
+        - banks
+      summary: Get external banks
+      description: Retrieve a list of all banks registered with the central bank
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: A list of external banks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    prefix:
+                      type: string
+                      example: "abc"
+                    name:
+                      type: string
+                      example: "Example Bank"
+                    transactionUrl:
+                      type: string
+                      format: uri
+                      example: "https://example.com/transactions/b2b"
+                    jwksUrl:
+                      type: string
+                      format: uri
+                      example: "https://example.com/jwks"
+                    owner:
+                      type: string
+                      example: "Bank Owner"
+        '502':
+          description: Central Bank connectivity issue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Central Bank connectivity issue"
+                  error:
+                    type: string
+                    example: "Failed to get banks: Not Found"
+
   /banks/{bankId}:
     get:
       tags:

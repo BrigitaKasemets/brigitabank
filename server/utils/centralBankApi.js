@@ -29,28 +29,24 @@ const mockBanks = {
 };
 
 // Get bank information from central bank by prefix
+// In centralBankApi.js
 exports.getBankByPrefix = async (prefix) => {
-  // If in test mode, return mock data
-  if (process.env.TEST_MODE === 'true') {
-    console.log(`[TEST_MODE] Getting mock bank info for prefix: ${prefix}`);
-    return mockBanks[prefix] || null;
-  }
-
   try {
-    const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks/${prefix}`, {
+    const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks`, {
       headers: {
-        'X-API-Key': process.env.CENTRAL_BANK_API_KEY
+        'X-API-KEY': process.env.API_KEY
       }
     });
 
     if (!response.ok) {
-      console.error(`Error getting bank info: ${response.status}`);
-      return null;
+      throw new Error(`Failed to get banks: ${response.statusText}`);
     }
 
-    return await response.json();
+    const banks = await response.json();
+    // Look for bank with bankPrefix or prefix property
+    return banks.find(bank => (bank.bankPrefix === prefix || bank.prefix === prefix));
   } catch (err) {
-    console.error('Central Bank API error:', err.message);
+    console.error('Error getting bank by prefix:', err);
     return null;
   }
 };
