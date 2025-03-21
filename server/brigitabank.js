@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -28,12 +29,16 @@ app.use(cors());
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+app.get('/', (req, res) => {
+  res.send('BrigitaBank API server is running');
+});
+
 // API routes
-app.use('/api/users', usersRoutes);
-app.use('/api/accounts', accountsRoutes);
-app.use('/api/transactions', transactionsRoutes);
-app.use('/api/sessions', sessionsRoutes);
-app.use('/api/banks', banksRoutes);
+app.use('/users', usersRoutes);
+app.use('/accounts', accountsRoutes);
+app.use('/transactions', transactionsRoutes);
+app.use('/sessions', sessionsRoutes);
+app.use('/banks', banksRoutes);
 app.use('/transactions/b2b', b2bRoutes);
 
 // JWKS endpoint (separate from banks routes)
@@ -45,7 +50,6 @@ app.get('/transactions/jwks', (req, res) => {
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
-
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../', 'client', 'build', 'index.html'));
   });
@@ -62,7 +66,7 @@ app.use((err, req, res, next) => {
 
 // Set port and start server
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`BrigitaBank server running on port ${PORT}`);
 });
 

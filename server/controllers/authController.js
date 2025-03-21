@@ -1,4 +1,5 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
+const secret = process.env.JWT_SECRET;
 const User = require('../models/User');
 
 // Registreerimine
