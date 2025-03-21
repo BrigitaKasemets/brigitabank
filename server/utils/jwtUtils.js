@@ -7,7 +7,7 @@ const keys = require('../config/keys');
 // JWT loomine
 exports.createJWT = (payload) => {
   try {
-    const privateKey = fs.readFileSync('./config/keys/private.key', 'utf8');
+    const privateKey = fs.readFileSync('./config/keys/private.pem', 'utf8');
     return jwt.sign(payload, privateKey, {
       algorithm: 'RS256',
       expiresIn: '1h'
