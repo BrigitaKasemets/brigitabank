@@ -4,7 +4,7 @@ const axios = require('axios');
 class CentralBankService {
     constructor() {
         this.baseURL = process.env.CENTRAL_BANK_URL;
-        this.apiKey = process.env.CENTRAL_BANK_API_KEY;
+        this.apiKey = process.env.API_KEY;
     }
 
     async getBanks() {
