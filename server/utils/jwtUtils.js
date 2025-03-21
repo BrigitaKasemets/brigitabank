@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken');
-// Mocking node-fetch for CommonJS compatibility
+const fs = require('fs');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const jwksClient = require('jwks-rsa');
 const keys = require('../config/keys');
 
-// JWT loomine
+// JWT creation
 exports.createJWT = (payload) => {
   try {
-    const privateKey = fs.readFileSync('./config/keys/private.pem', 'utf8');
-    return jwt.sign(payload, privateKey, {
+    // Use the key from the keys module instead of reading from file
+    return jwt.sign(payload, keys.privateKey, {
       algorithm: 'RS256',
       expiresIn: '1h'
     });

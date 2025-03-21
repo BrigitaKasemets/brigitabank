@@ -41,8 +41,8 @@ app.use('/sessions', sessionsRoutes);
 app.use('/banks', banksRoutes);
 app.use('/transactions/b2b', b2bRoutes);
 
-// JWKS endpoint (separate from banks routes)
-app.get('/transactions/jwks', (req, res) => {
+// JWKS endpoint
+app.get('/banks/jwks', (req, res) => {
   const keys = require('./config/keys');
   res.json(keys.getJwks());
 });

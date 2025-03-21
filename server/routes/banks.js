@@ -52,7 +52,7 @@ router.get('/test-connection/:prefix', auth, async (req, res) => {
 router.get('/test-connection/:prefix', auth, async (req, res) => {
     try {
         const { prefix } = req.params;
-        const centralBankApi = require('./utils/centralBankApi');
+        const centralBankApi = require('server/utils/centralBankApi');
 
         console.log(`Testing connection for bank prefix: ${prefix}`);
         const bank = await centralBankApi.getBankByPrefix(prefix);

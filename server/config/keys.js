@@ -1,28 +1,65 @@
-// Add this function to server/config/keys.js
-const generateNewKeys = async () => {
-  console.log('Genereeritakse uued RSA võtmed...');
-  const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem',
-    },
-    privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
-    },
-  });
+// Add to server/config/keys.js
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
-  fs.writeFileSync(privateKeyPath, privateKey);
-  fs.writeFileSync(publicKeyPath, publicKey);
+const privateKeyPath = path.join(__dirname, 'keys', 'private.pem');
+const publicKeyPath = path.join(__dirname, 'keys', 'public.pem');
 
-  // Update module variables
-  module.exports.privateKey = privateKey;
-  module.exports.publicKey = publicKey;
+// Read keys if they exist
+let privateKey, publicKey;
+try {
+  privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+  publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+} catch (err) {
+  console.error('No keys found, generating new keys...');
+  const keys = generateNewKeys();
+  privateKey = keys.privateKey;
+  publicKey = keys.publicKey;
+}
 
-  console.log('Võtmed genereeritud!');
-  return { privateKey, publicKey };
+// Export keys
+module.exports.privateKey = privateKey;
+module.exports.publicKey = publicKey;
+
+// Generate JWKS from public key
+module.exports.getJwks = () => {
+  try {
+    // Parse the public key
+    const pemHeader = '-----BEGIN PUBLIC KEY-----';
+    const pemFooter = '-----END PUBLIC KEY-----';
+    const pemContents = publicKey
+        .replace(pemHeader, '')
+        .replace(pemFooter, '')
+        .replace(/\s/g, '');
+
+    // Create modulus and exponent components
+    const publicKeyObject = crypto.createPublicKey({
+      key: publicKey,
+      format: 'pem'
+    });
+
+    const keyData = publicKeyObject.export({ format: 'jwk' });
+
+    // Create a key ID if it doesn't exist
+    const kid = uuidv4();
+
+    // Return JWKS format
+    return {
+      keys: [
+        {
+          kty: "RSA",
+          kid: kid,
+          use: "sig",
+          alg: "RS256",
+          n: keyData.n,
+          e: keyData.e
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error generating JWKS:', error);
+    return { keys: [] };
+  }
 };
-
-// Export the function
-module.exports.generateNewKeys = generateNewKeys;
