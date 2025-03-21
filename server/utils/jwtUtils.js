@@ -7,16 +7,13 @@ const keys = require('../config/keys');
 // JWT loomine
 exports.createJWT = (payload) => {
   try {
-    // Allkirjasta JWT oma privaatse võtmega
-    return jwt.sign(payload, keys.privateKey, {
+    const privateKey = fs.readFileSync('./config/keys/private.key', 'utf8');
+    return jwt.sign(payload, privateKey, {
       algorithm: 'RS256',
-      expiresIn: '5m',
-      header: {
-        kid: '1' // Key ID
-      }
+      expiresIn: '1h'
     });
   } catch (err) {
-    console.error('JWT loomise viga:', err.message);
+    console.error('JWT signing error:', err);
     return null;
   }
 };

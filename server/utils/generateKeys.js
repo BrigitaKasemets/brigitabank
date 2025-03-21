@@ -1,5 +1,11 @@
-// server/utils/generateKeys.js
 const fs = require('fs');
+try {
+    const privateKey = fs.readFileSync('./config/keys/private.key', 'utf8');
+    console.log('Private key exists:', privateKey.length > 0);
+} catch (err) {
+    console.error('Error reading private key:', err.message);
+}
+
 const path = require('path');
 const crypto = require('crypto');
 
