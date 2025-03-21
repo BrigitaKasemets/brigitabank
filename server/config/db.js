@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
 
+
 // SQLite database connection
 const sequelize = new Sequelize({
   dialect: 'sqlite',
