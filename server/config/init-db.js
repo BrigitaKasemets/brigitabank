@@ -4,22 +4,12 @@ const { sequelize } = require('./db');
 const User = require('../models/User');
 const Account = require('../models/Account');
 const Transaction = require('../models/Transaction');
-const Bank = require('../models/Bank');
-const bcrypt = require('bcryptjs');
 
 const initializeDatabase = async () => {
   try {
     // Sync all models with the database
     await sequelize.sync({ force: true });
     console.log('Kõik andmebaasi tabelid on edukalt loodud');
-
-    // Create admin user
-    const admin = await User.create({
-      fullName: 'Admin Kasutaja',
-      username: 'admin@brigitabank.com',
-      password: 'admin123',
-      role: 'admin'
-    });
 
     // Create demo user - don't hash password manually
     const user = await User.create({
@@ -42,24 +32,6 @@ const initializeDatabase = async () => {
       userId: user.id,
       balance: 500,
       currency: 'USD'
-    });
-
-    // Register our bank
-    await Bank.create({
-      prefix: 'ABC',
-      name: 'Brigita Bank',
-      transactionUrl: 'http://localhost:3001/transactions/b2b',
-      jwksUrl: 'http://localhost:3001/transactions/jwks',
-      apiKey: 'brigitabank-api-key'
-    });
-
-    // Register partner bank for testing
-    await Bank.create({
-      prefix: 'XYZ',
-      name: 'Partner Bank',
-      transactionUrl: 'http://localhost:3001/transactions/b2b',
-      jwksUrl: 'http://localhost:3001/transactions/jwks',
-      apiKey: 'partnerbank-api-key'
     });
 
     // Create a sample transaction

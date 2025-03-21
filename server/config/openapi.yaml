@@ -361,7 +361,7 @@ paths:
         '404':
           description: Transaction not found
 
-    # Session endpoints
+  # Session endpoints
   /sessions:
     post:
       tags:
@@ -404,7 +404,6 @@ paths:
             application/json:
               schema:
                 type: object
-
 
   /sessions/{sessionId}:
     delete:
@@ -452,84 +451,6 @@ paths:
           description: Invalid JWT or signature
         '404':
           description: Account not found
-
-  /banks:
-    get:
-      tags:
-        - banks
-      summary: Get all banks
-      description: Retrieve a list of all registered banks
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: A list of banks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Bank'
-    post:
-      tags:
-        - banks
-      summary: Register a new bank
-      description: Register a new bank in the system
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BankInput'
-      responses:
-        '201':
-          description: Bank registered successfully
-        '400':
-          description: Invalid input data
-
-  /banks/register-with-central-bank:
-    post:
-      tags:
-        - banks
-      summary: Register with central bank
-      description: Register this bank with the external central bank system using environment variables
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: Registration successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Bank registered successfully with central bank
-                  data:
-                    type: object
-                    properties:
-                      prefix:
-                        type: string
-                        example: fbb
-        '500':
-          description: Registration failed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
-                    example: Registration failed
 
   /banks/external:
     get:
@@ -580,78 +501,83 @@ paths:
                     type: string
                     example: "Failed to get banks: Not Found"
 
-  /banks/{bankId}:
-    get:
+  /banks/register-with-central-bank:
+    post:
       tags:
         - banks
-      summary: Get bank by ID
-      description: Retrieve a specific bank by ID
+      summary: Register with central bank
+      description: Register this bank with the external central bank system using environment variables
       security:
         - BearerAuth: [ ]
-      parameters:
-        - name: bankId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '200':
-          description: Bank found
+          description: Registration successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Bank'
-        '404':
-          description: Bank not found
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Bank registered successfully with central bank
+                  data:
+                    type: object
+                    properties:
+                      prefix:
+                        type: string
+                        example: fbb
+        '500':
+          description: Registration failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Registration failed
 
-    put:
+  /banks/refresh-keys:
+    post:
       tags:
         - banks
-      summary: Update bank
-      description: Update an existing bank
+      summary: Refresh RSA keys
+      description: Generate new RSA keys and update registration with the central bank
       security:
         - BearerAuth: [ ]
-      parameters:
-        - name: bankId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BankUpdate'
       responses:
         '200':
-          description: Bank updated successfully
-        '400':
-          description: Invalid input data
-        '404':
-          description: Bank not found
-
-    delete:
-      tags:
-        - banks
-      summary: Delete bank
-      description: Delete a bank
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: bankId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Bank deleted successfully
-        '404':
-          description: Bank not found
+          description: Keys refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Keys refreshed and registration updated
+        '500':
+          description: Failed to refresh keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to refresh keys
 
   /banks/jwks:
     get:
@@ -666,6 +592,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JWKS'
+
+  /banks/external/{prefix}:
+    get:
+      tags:
+        - banks
+      summary: Get external bank by prefix
+      description: Retrieve details of a specific bank registered with the central bank by its prefix
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bank details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prefix:
+                    type: string
+                    example: "abc"
+                  name:
+                    type: string
+                    example: "Example Bank"
+                  transactionUrl:
+                    type: string
+                    format: uri
+                    example: "https://example.com/transactions/b2b"
+                  jwksUrl:
+                    type: string
+                    format: uri
+                    example: "https://example.com/jwks"
+                  owner:
+                    type: string
+                    example: "Bank Owner"
+        '404':
+          description: Bank not found
+        '502':
+          description: Central Bank connectivity issue
 
 components:
   securitySchemes:
@@ -877,74 +847,6 @@ components:
       required:
         - username
         - password
-
-    Bank:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        prefix:
-          type: string
-        transactionUrl:
-          type: string
-          format: uri
-        jwksUrl:
-          type: string
-          format: uri
-        owner:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - prefix
-        - transactionUrl
-        - jwksUrl
-        - owner
-
-    BankInput:
-      type: object
-      properties:
-        name:
-          type: string
-        prefix:
-          type: string
-        transactionUrl:
-          type: string
-          format: uri
-        jwksUrl:
-          type: string
-          format: uri
-        owner:
-          type: string
-      required:
-        - name
-        - prefix
-        - transactionUrl
-        - jwksUrl
-        - owner
-
-    BankUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        transactionUrl:
-          type: string
-          format: uri
-        jwksUrl:
-          type: string
-          format: uri
-        owner:
-          type: string
 
     B2BTransactionInput:
       type: object

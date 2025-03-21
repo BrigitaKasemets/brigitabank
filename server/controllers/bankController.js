@@ -1,15 +1,58 @@
-const Bank = require('../models/Bank');
+const fs = require('fs');
+const path = require('path');
+const Account = require('../models/Account');
 const keys = require('../config/keys');
-// Dynamic import for node-fetch compatibility with CommonJS
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const dotenv = require('dotenv');
+const { sequelize } = require('../config/db');
 
-// Get JWKS for verifying transactions
-exports.getJwks = (req, res) => {
+// Function to update .env file
+const updateEnvFile = (newPrefix) => {
+    const envPath = path.resolve(__dirname, '../../.env');
+    let envContent = fs.readFileSync(envPath, 'utf8');
+
+    // Update the BANK_PREFIX line
+    envContent = envContent.replace(
+        /BANK_PREFIX=.*/,
+        `BANK_PREFIX=${newPrefix}`
+    );
+
+    fs.writeFileSync(envPath, envContent);
+
+    // Update environment in current process
+    process.env.BANK_PREFIX = newPrefix;
+
+    console.log(`Updated .env file with new prefix: ${newPrefix}`);
+};
+
+// Function to update all account numbers
+const updateAccountNumbers = async (oldPrefix, newPrefix) => {
+    const t = await sequelize.transaction();
+
     try {
-        res.json(keys.getJwks());
+        // Get all accounts
+        const accounts = await Account.findAll({ transaction: t });
+
+        // Update each account with new prefix
+        for (const account of accounts) {
+            const oldAccountNumber = account.accountNumber;
+            // Replace old prefix with new prefix at the beginning of account number
+            const newAccountNumber = newPrefix + oldAccountNumber.substring(oldPrefix.length);
+
+            await Account.update(
+                { accountNumber: newAccountNumber },
+                { where: { id: account.id }, transaction: t }
+            );
+
+            console.log(`Updated account ${oldAccountNumber} to ${newAccountNumber}`);
+        }
+
+        await t.commit();
+        console.log(`Updated all account numbers with new prefix: ${newPrefix}`);
+        return true;
     } catch (err) {
-        console.error('JWKS request error:', err.message);
-        res.status(500).json({ msg: 'Failed to generate JWKS' });
+        await t.rollback();
+        console.error('Failed to update account numbers:', err);
+        throw err;
     }
 };
 
@@ -44,23 +87,29 @@ exports.registerWithCentralBank = async (req, res) => {
         const result = await response.json();
         console.log('Registration successful:', result);
 
-        // Update our own database with the registration result
-        // You might want to save the prefix and API key if returned
-        if (result && result.prefix) {
-            // Store or update the bank info in your database
-            // For now, we just return the result
+        // If we got a new prefix, update .env and account numbers
+        if (result && result.prefix && result.prefix !== process.env.BANK_PREFIX) {
+            const oldPrefix = process.env.BANK_PREFIX;
+
+            // Update .env file
+            updateEnvFile(result.prefix);
+
+            // Update account numbers
+            await updateAccountNumbers(oldPrefix, result.prefix);
+
             return res.json({
                 success: true,
-                message: 'Bank registered successfully with central bank',
+                message: 'Bank registered successfully with central bank. Prefix and accounts updated.',
                 data: {
-                    prefix: result.prefix
+                    prefix: result.prefix,
+                    oldPrefix: oldPrefix
                 }
             });
         }
 
         res.json({
             success: true,
-            message: 'Registration request sent successfully',
+            message: 'Registration successful, no change in bank prefix',
             data: result
         });
     } catch (err) {
@@ -72,170 +121,61 @@ exports.registerWithCentralBank = async (req, res) => {
     }
 };
 
-// Get all banks from external central bank
+// Get all external banks from central bank
 exports.getExternalBanks = async (req, res) => {
     try {
-        const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks`, {
-            headers: {
-                'X-API-KEY': process.env.API_KEY
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to get banks: ${response.statusText}`);
-        }
-
-        const banks = await response.json();
+        const centralBankApi = require('../utils/centralBankApi');
+        const banks = await centralBankApi.getAllBanks();
         res.json(banks);
     } catch (err) {
-        console.error('Error getting external banks:', err);
-        res.status(502).json({ message: 'Central Bank connectivity issue', error: err.message });
+        console.error('Failed to get external banks:', err);
+        res.status(502).json({
+            success: false,
+            message: 'Central Bank connectivity issue',
+            error: err.message
+        });
     }
 };
 
-// Get specific external bank by prefix
+// Get a specific external bank by prefix
 exports.getExternalBankByPrefix = async (req, res) => {
     try {
-        const prefix = req.params.prefix;
-        const response = await fetch(`${process.env.CENTRAL_BANK_URL}/banks/${prefix}`, {
-            headers: {
-                'X-API-KEY': process.env.API_KEY
-            }
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                return res.status(404).json({ message: 'Bank not found in central bank registry' });
-            }
-            throw new Error(`Failed to get bank: ${response.statusText}`);
-        }
-
-        const bank = await response.json();
-        res.json(bank);
-    } catch (err) {
-        console.error(`Error getting external bank with prefix ${req.params.prefix}:`, err);
-        res.status(502).json({ message: 'Central Bank connectivity issue', error: err.message });
-    }
-};
-
-// Get all banks
-exports.getAllBanks = async (req, res) => {
-    try {
-        const banks = await Bank.findAll({
-            attributes: { exclude: ['apiKey'] }
-        });
-        res.json(banks);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
-    }
-};
-
-// Create a new bank
-exports.createBank = async (req, res) => {
-    try {
-        const { name, prefix, transactionUrl, jwksUrl } = req.body;
-
-        // Check if bank already exists
-        const existingBank = await Bank.findOne({ where: { prefix } });
-        if (existingBank) {
-            return res.status(400).json({ msg: 'Bank with this prefix already exists' });
-        }
-
-        // Create bank record
-        const bank = await Bank.create({
-            name,
-            prefix,
-            transactionUrl,
-            jwksUrl
-        });
-
-        res.status(201).json({
-            id: bank.id,
-            name: bank.name,
-            prefix: bank.prefix,
-            transactionUrl: bank.transactionUrl,
-            jwksUrl: bank.jwksUrl,
-            status: bank.status,
-            createdAt: bank.createdAt
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
-    }
-};
-
-// Get bank by ID
-exports.getBankById = async (req, res) => {
-    try {
-        const bank = await Bank.findByPk(req.params.bankId, {
-            attributes: { exclude: ['apiKey'] }
-        });
+        const { prefix } = req.params;
+        const centralBankApi = require('../utils/centralBankApi');
+        const bank = await centralBankApi.getBankByPrefix(prefix);
 
         if (!bank) {
-            return res.status(404).json({ msg: 'Bank not found' });
+            return res.status(404).json({
+                success: false,
+                message: 'Bank not found'
+            });
         }
 
         res.json(bank);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
+        console.error(`Failed to get bank with prefix ${req.params.prefix}:`, err);
+        res.status(502).json({
+            success: false,
+            message: 'Central Bank connectivity issue',
+            error: err.message
+        });
     }
 };
 
-// Update bank
-exports.updateBank = async (req, res) => {
+// Key refresh functionality
+exports.refreshKeys = async (req, res) => {
     try {
-        const { name, transactionUrl, jwksUrl } = req.body;
+        // Generate new keys
+        await keys.generateNewKeys();
 
-        // Check if admin
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ msg: 'Access denied' });
-        }
-
-        const bank = await Bank.findByPk(req.params.bankId);
-        if (!bank) {
-            return res.status(404).json({ msg: 'Bank not found' });
-        }
-
-        await bank.update({
-            name: name || bank.name,
-            transactionUrl: transactionUrl || bank.transactionUrl,
-            jwksUrl: jwksUrl || bank.jwksUrl
-        });
-
-        res.json({
-            id: bank.id,
-            name: bank.name,
-            prefix: bank.prefix,
-            transactionUrl: bank.transactionUrl,
-            jwksUrl: bank.jwksUrl,
-            status: bank.status,
-            updatedAt: bank.updatedAt
-        });
+        // Re-register with central bank to update JWKS URL
+        await this.registerWithCentralBank(req, res);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
-    }
-};
-
-// Delete bank
-exports.deleteBank = async (req, res) => {
-    try {
-        // Check if admin
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ msg: 'Access denied' });
-        }
-
-        const bank = await Bank.findByPk(req.params.bankId);
-        if (!bank) {
-            return res.status(404).json({ msg: 'Bank not found' });
-        }
-
-        await bank.destroy();
-        res.status(204).send();
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ msg: 'Server error' });
+        console.error('Failed to refresh keys:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to refresh keys',
+            error: err.message
+        });
     }
 };

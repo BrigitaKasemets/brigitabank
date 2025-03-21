@@ -1,5 +1,3 @@
-// Import required packages
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -17,26 +15,6 @@ const b2bRoutes = require('./routes/b2b');
 
 // Initialize Express app
 const app = express();
-
-
-// Central Bank mock routes (must be defined after app initialization)
-if (process.env.TEST_MODE === 'true') {
-  console.log('Running in TEST_MODE - Central Bank API mocked');
-
-  app.get('/api/central-bank/banks', (req, res) => {
-    const { centralBankApi } = require('./utils/centralBankApi');
-    res.json(centralBankApi.getAllBanks());
-  });
-
-  app.get('/api/central-bank/banks/:prefix', (req, res) => {
-    const { centralBankApi } = require('./utils/centralBankApi');
-    const bank = centralBankApi.getBankByPrefix(req.params.prefix);
-    if (!bank) {
-      return res.status(404).json({ message: 'Bank not found' });
-    }
-    res.json(bank);
-  });
-}
 
 // Middleware
 app.use(express.json());

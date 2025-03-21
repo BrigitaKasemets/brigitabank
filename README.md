@@ -1,83 +1,98 @@
-# Brigita Bank
+# BrigitaBank
 
-A simple online banking application with features for managing accounts and performing internal and bank-to-bank transactions.
+BrigitaBank is a full-featured online banking application that supports account management and interbank transactions via central bank integration.
 
 ## Features
-
-- User authentication (register, login)
-- Account management (create and view accounts in different currencies)
-- Transaction management (internal and external transfers)
-- Bank-to-bank transaction protocol using JWT
-- REST API with Swagger documentation
-- Clean and responsive UI
+- **User Authentication:** Register and login functionality.
+- **Account Management:** Create and view accounts in different currencies.
+- **Transaction Management:** Internal and external transfers.
+- **Bank-to-Bank Transaction Protocol:** Using JWT and RSA signatures for secure communication.
+- **Central Bank Integration:** Supports interbank transfers via a central bank.
+- **REST API with Swagger Documentation:** Interactive API documentation.
+- **Responsive UI:** User-friendly interface for smooth interaction.
 
 ## Technology Stack
-
-- **Backend**: Node.js, Express
-- **Database**: SQLite with Sequelize ORM
-- **Authentication**: JWT (JSON Web Tokens)
-- **Frontend**: HTML, CSS, JavaScript, EJS templates
-- **Documentation**: Swagger/OpenAPI
+- **Backend:** Node.js, Express
+- **Database:** SQLite with Sequelize ORM
+- **Authentication:** JWT (JSON Web Tokens)
+- **Security:** RSA key pairs for transaction signing
+- **API Documentation:** Swagger/OpenAPI
 
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js (v14 or later)
 - npm (comes with Node.js)
 
 ### Installation
-
 1. Clone the repository:
-   ```
-   git clone https://github.com/BrigitaKasemets/brigitabank.git
-   cd brigitabank/server
-   ```
-
+```bash
+git clone https://github.com/BrigitaKasemets/brigitabank.git
+cd brigitabank/server
+```
 2. Install dependencies:
-   ```
-   npm install
-   ```
+```bash
+npm install
+```
+3. Create a `.env` file from the `.env.example` file.
 
-3. Create a `.env` file with the following variables (or use the existing one):
-   ```
-   NODE_ENV=development
-   PORT=3001
-   JWT_SECRET=your_secret_key
-   BANK_PREFIX=ABC
-   TEST_MODE=true
-   ```
+4. Generate RSA keys for signing transactions:
+```bash
+node server/utils/generateKeys.js
+```
+5. Initialize the database:
+```bash
+npm run init-db
+```
+6. Start the application:
+```bash
+npm run dev
+```
+7. Register with the central bank:
+    - Log in.
+    - Navigate to the **Banks** section.
+    - Click "Register with Central Bank".
+    - Your bank prefix and account numbers will be automatically updated.
 
-4. Initialize the database with demo data:
-   ```
-   npm run init-db
-   ```
+8. Open your browser and navigate to:
+```
+http://localhost:3001
+```
 
-5. Start the application:
-   ```
-   npm run dev
-   ```
-
-6. Open your browser and navigate to:
-   ```
-   http://localhost:3001
-   ```
+## Central Bank Integration
+This bank application works with an external central bank for interoperability:
+- **Bank Registration:** Register your bank with the central bank to obtain a unique bank prefix.
+- **Account Numbers:** All accounts automatically use your bank's prefix (e.g., `abc12345...`).
+- **B2B Transactions:** Send/receive money to/from other banks in the network.
+- **JWKS Endpoint:** Your RSA public keys are available at `/transactions/jwks`.
+- **Key Management:** Refresh your keys from the **Banks** section when needed.
 
 ## API Documentation
-
-The API documentation is available at `/api-docs` endpoint:
+The API documentation is available at the `/api-docs` endpoint:
 ```
 http://localhost:3001/api-docs
 ```
 
 ## Demo Accounts
+After running the initialization script, the following demo account will be available:
 
-After running the initialization script, the following demo accounts will be available:
+**Regular User:**
+- Username: `user@brigitabank.com`
+- Password: `user123`
 
-- **Admin User**:
-  - username: admin@brigitabank.com
-  - Password: admin123
+The account will have sample EUR and USD accounts created automatically.
 
-- **Regular User**:
-  - username: user@brigitabank.com
-  - Password: user123
+## Security Notes
+- RSA key pairs are used for signing and verifying interbank transactions.
+- All B2B transactions use JWT with RS256 signatures.
+- Bank registration information is stored in the `.env` file.
+- Account numbers are prefixed with your bank's unique identifier.
+
+## Testing Interbank Transfers
+To test interbank transfers, you'll need:
+- Your bank registered with the central bank.
+- At least one other bank registered with the central bank.
+- Valid account numbers for both banks.
+
+The system automatically validates all transactions through the central bank API.
+

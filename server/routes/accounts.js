@@ -6,13 +6,10 @@ const { accountValidation, validateRequest } = require('../middleware/validation
 
 router.post('/', auth, accountValidation, validateRequest, accountController.createAccount);
 
-
 router.get('/', auth, accountController.getMyAccounts);
-
 
 router.get('/:accountNumber', auth, accountController.getAccountByNumber);
 
-// Add this to server/routes/accounts.js
 router.get('/:accountNumber/owner', auth, accountController.getAccountOwnerName);
 
 module.exports = router;

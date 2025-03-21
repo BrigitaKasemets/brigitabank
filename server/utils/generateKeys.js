@@ -23,7 +23,7 @@ const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
 });
 
 // Write keys to files
-fs.writeFileSync(path.join(keysDir, 'private.key'), privateKey);
-fs.writeFileSync(path.join(keysDir, 'public.key'), publicKey);
+fs.writeFileSync(path.join(keysDir, 'private.pem'), privateKey);
+fs.writeFileSync(path.join(keysDir, 'public.pem'), publicKey);
 
 console.log('RSA key pair generated successfully');

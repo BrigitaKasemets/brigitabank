@@ -30,6 +30,22 @@ class CentralBankService {
             throw error;
         }
     }
+
+    async registerBank(bankName, callbackUrl) {
+        try {
+            const response = await axios.post(`${this.baseURL}/register`, {
+                bank_name: bankName,
+                callback_url: callbackUrl
+            }, {
+                headers: { 'X-API-KEY': this.apiKey }
+            });
+
+            return response.data.prefix;
+        } catch (error) {
+            console.error('Failed to register with central bank:', error);
+            throw new Error(`Failed to register with central bank: ${error.message}`);
+        }
+    }
 }
 
 module.exports = new CentralBankService();
