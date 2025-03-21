@@ -3,28 +3,17 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 // Get bank information from central bank by prefix
 exports.getBankByPrefix = async (prefix) => {
   try {
-    const url = `${process.env.CENTRAL_BANK_URL}/banks/${prefix}`;
-    console.log(`Getting bank with prefix: ${prefix} from central bank`);
-    console.log(`Request URL: ${url}`);
-    console.log(`Using API Key: ${process.env.API_KEY ? '***' + process.env.API_KEY.substring(process.env.API_KEY.length - 4) : 'MISSING'}`);
+    // First get all banks
+    const allBanks = await exports.getAllBanks();
 
-    const response = await fetch(url, {
-      headers: {
-        'X-API-KEY': process.env.API_KEY
-      }
-    });
+    // Find the bank with matching prefix
+    const bank = allBanks.find(bank => bank.bankPrefix === prefix);
 
-    console.log(`Response status: ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error response body: ${errorText}`);
-      throw new Error(`Failed to get bank: ${response.statusText}`);
+    if (!bank) {
+      throw new Error('Bank not found');
     }
 
-    const data = await response.json();
-    console.log(`Bank data received:`, data);
-    return data;
+    return bank;
   } catch (err) {
     console.error('Error getting bank by prefix:', err);
     throw err;

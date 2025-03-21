@@ -132,6 +132,7 @@ exports.createExternalTransaction = async (req, res) => {
 
     // Extract bank prefix from target account
     const targetBankPrefix = accountTo.substring(0, 3);
+    console.log(`Target bank prefix: ${targetBankPrefix}`);
 
     // Get target bank details from central bank
     const targetBank = await centralBankApi.getBankByPrefix(targetBankPrefix);
