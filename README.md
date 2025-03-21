@@ -1,12 +1,12 @@
 # BrigitaBank
 
-BrigitaBank is a full-featured online banking application that supports account management and interbank transactions via central bank integration.
+BrigitaBank is a comprehensive online banking application that supports account management and interbank transactions via integration with a central bank.
 
 ## Features
 - **User Authentication:** Register and login functionality.
 - **Account Management:** Create and view accounts in different currencies.
 - **Transaction Management:** Internal and external transfers.
-- **Bank-to-Bank Transaction Protocol:** Using JWT and RSA signatures for secure communication.
+- **Bank-to-Bank Transaction Protocol:** Secure communication using JWT and RSA signatures.
 - **Central Bank Integration:** Supports interbank transfers via a central bank.
 - **REST API with Swagger Documentation:** Interactive API documentation.
 - **Responsive UI:** User-friendly interface for smooth interaction.
@@ -21,42 +21,48 @@ BrigitaBank is a full-featured online banking application that supports account 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v14 or later)
-- npm (comes with Node.js)
+- **Node.js:** v14 or later
+- **npm:** Comes with Node.js
 
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/BrigitaKasemets/brigitabank.git
-cd brigitabank/server
+    git clone https://github.com/BrigitaKasemets/brigitabank.git
+    cd brigitabank/server
 ```
 2. Install dependencies:
 ```bash
-npm install
+    npm install
 ```
 3. Create a `.env` file from the `.env.example` file.
 
 4. Generate RSA keys for signing transactions:
 ```bash
-node server/utils/generateKeys.js
+    node utils/generateKeys.js
 ```
 5. Initialize the database:
 ```bash
-npm run init-db
+    npm run init-db
 ```
 6. Start the application:
 ```bash
-npm run dev
+    npm run dev
 ```
 7. Register with the central bank:
-    - Log in.
-    - Navigate to the **Banks** section.
-    - Click "Register with Central Bank".
-    - Your bank prefix and account numbers will be automatically updated.
+   - Log in.
+   - Navigate to the **Banks** section.
+   - Click "Register with Central Bank".
+   - Your bank prefix and account numbers will be automatically updated.
 
-8. Open your browser and navigate to:
+8. Run the account prefix migration script:
+```bash
+    cd server
+    node utils/accountPrefixMigration.js
 ```
-http://localhost:3001
+
+9. Open your browser and navigate to:
+```
+    http://localhost:3001
 ```
 
 ## Central Bank Integration
@@ -70,7 +76,7 @@ This bank application works with an external central bank for interoperability:
 ## API Documentation
 The API documentation is available at the `/api-docs` endpoint:
 ```
-http://localhost:3001/api-docs
+    http://localhost:3001/api-docs
 ```
 
 ## Demo Accounts
