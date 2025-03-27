@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const secret = process.env.JWT_SECRET;
 const User = require('../models/User');
 
-// Registreerimine
+// Register
 exports.register = async (req, res) => {
   try {
     const { fullName, username, password } = req.body;
@@ -53,7 +53,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Sisselogimine
+// Log in
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -102,7 +102,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// Praeguse kasutaja info
+// Get current user
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -120,7 +120,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// kõik kasutajad
+// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
 
@@ -132,5 +132,23 @@ exports.getAllUsers = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Serveri viga - kasutajate laadimine ebaõnnestus' });
+  }
+};
+
+// Get user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.userId, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ msg: 'Server error - failed to load user' });
   }
 };

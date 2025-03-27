@@ -6,7 +6,7 @@ const { registerValidation, loginValidation, validateRequest } = require('../mid
 
 router.get('/', users, authController.getAllUsers);
 router.post('/', registerValidation, validateRequest, authController.register);
-
+router.get('/:userId', users, authController.getUserById);
 router.get('/me', users, authController.getMe);
 
 module.exports = router;
