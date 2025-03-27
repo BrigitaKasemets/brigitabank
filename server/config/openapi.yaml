@@ -103,34 +103,6 @@ paths:
         '404':
           description: User not found
 
-    put:
-      tags:
-        - users
-      summary: Update user
-      description: Update an existing user
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdate'
-      responses:
-        '200':
-          description: User updated successfully
-        '400':
-          description: Invalid input data
-        '404':
-          description: User not found
-
     delete:
       tags:
         - users
@@ -210,34 +182,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-        '404':
-          description: Account not found
-
-    put:
-      tags:
-        - accounts
-      summary: Update account
-      description: Update an existing account
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: accountId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccountUpdate'
-      responses:
-        '200':
-          description: Account updated successfully
-        '400':
-          description: Invalid input data
         '404':
           description: Account not found
 
@@ -322,34 +266,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Transaction'
-        '404':
-          description: Transaction not found
-
-    put:
-      tags:
-        - transactions
-      summary: Update transaction
-      description: Update an existing transaction (admin only)
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: transactionId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransactionUpdate'
-      responses:
-        '200':
-          description: Transaction updated successfully
-        '400':
-          description: Invalid input data
         '404':
           description: Transaction not found
 
