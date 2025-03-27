@@ -18,7 +18,7 @@ exports.createAccount = async (req, res) => {
       name,
       currency,
       userId,
-      balance: 0.00
+      balance: 100.00
     });
 
     res.status(201).json(account);
@@ -34,6 +34,14 @@ exports.getMyAccounts = async (req, res) => {
     const accounts = await Account.findAll({
       where: { userId: req.user.id }
     });
+
+    // Return 404 if no accounts found
+    if (!accounts || accounts.length === 0) {
+      return res.status(404).json({
+        message: "No accounts found"
+      });
+    }
+
     res.json(accounts);
   } catch (err) {
     console.error(err.message);
@@ -41,30 +49,30 @@ exports.getMyAccounts = async (req, res) => {
   }
 };
 
-// Get account by number
-exports.getAccountByNumber = async (req, res) => {
+// Get accounts by user ID
+exports.getAccountsByUserId = async (req, res) => {
   try {
-    const account = await Account.findOne({
-      where: { accountNumber: req.params.accountNumber }
+
+    const userId = req.params.userId;
+
+    const accounts = await Account.findAll({
+      where: { userId }
     });
 
-    if (!account) {
-      return res.status(404).json({ msg: 'Account not found' });
+    if (!accounts || accounts.length === 0) {
+      return res.status(404).json({
+        message: "No accounts found for this user"
+      });
     }
 
-    // Check if the account belongs to the user
-    if (account.userId !== req.user.id) {
-      return res.status(403).json({ msg: 'Access denied' });
-    }
-
-    res.json(account);
+    res.json(accounts);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Konto omaniku nimi
+// Get account owner name by account number
 exports.getAccountOwnerName = async (req, res) => {
   try {
     const account = await Account.findOne({
@@ -88,5 +96,35 @@ exports.getAccountOwnerName = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Delete account by account number
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { accountNumber } = req.params;
+
+    // Find the account
+    const account = await Account.findOne({
+      where: { accountNumber }
+    });
+
+    // Check if account exists
+    if (!account) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    // Check if the account belongs to the authenticated user
+    if (account.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized - you can only delete your own accounts' });
+    }
+
+    // Delete the account
+    await account.destroy();
+
+    res.status(204).send();
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };

@@ -125,22 +125,6 @@ paths:
 
   # Account endpoints
   /accounts:
-    get:
-      tags:
-        - accounts
-      summary: Get all accounts
-      description: Retrieve all accounts for the authenticated user
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: A list of accounts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Account'
     post:
       tags:
         - accounts
@@ -159,52 +143,94 @@ paths:
           description: Account created successfully
         '400':
           description: Invalid input data
-
-  /accounts/{accountId}:
     get:
       tags:
         - accounts
-      summary: Get account by ID
-      description: Retrieve a specific account by ID
+      summary: Get all accounts
+      description: Retrieve all accounts for the authenticated user
       security:
         - BearerAuth: [ ]
-      parameters:
-        - name: accountId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '200':
-          description: Account found
+          description: A list of accounts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Account'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
         '404':
-          description: Account not found
+          description: No accounts found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No accounts found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required"
 
+  /accounts/user/{userId}:
+    get:
+      tags:
+        - accounts
+      summary: Get accounts by user ID
+      description: Retrieve all accounts for a specific user
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "ID of the user whose accounts to retrieve"
+      responses:
+        '200':
+          description: A list of accounts for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '403':
+          description: Unauthorized access
+        '404':
+          description: No accounts found
+
+  /accounts/{accountNumber}:
     delete:
       tags:
         - accounts
       summary: Delete account
-      description: Delete an account
+      description: Delete a specific account by account number
       security:
         - BearerAuth: [ ]
       parameters:
-        - name: accountId
+        - name: accountNumber
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+          description: "The account number with bank prefix (e.g., 'abc1234567890')"
       responses:
         '204':
           description: Account deleted successfully
+        '403':
+          description: Unauthorized - can only delete your own accounts
         '404':
           description: Account not found
-
   # Transaction endpoints
   /transactions:
     get:
@@ -223,6 +249,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Transaction'
+        '404':
+          description: No transactions found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No transactions found"
     post:
       tags:
         - transactions
@@ -258,7 +294,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         '200':
           description: Transaction found
@@ -282,7 +317,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         '204':
           description: Transaction deleted successfully
@@ -633,7 +667,7 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          format: integer
         accountNumber:
           type: string
         name:
@@ -686,7 +720,7 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          format: integer
         accountFrom:
           type: string
         accountTo:
@@ -874,3 +908,4 @@ components:
                       type: string
                     message:
                       type: string
+

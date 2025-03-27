@@ -7,20 +7,23 @@ exports.register = async (req, res) => {
   try {
     const { fullName, username, password } = req.body;
 
-    // Kontrolli, kas kasutaja juba eksisteerib
+    // Check if user already exists
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(400).json({ msg: 'Kasutaja juba eksisteerib' });
+      return res.status(409).json({
+        status: 'error',
+        message: 'User already exists'
+      });
     }
 
-    // Loo uus kasutaja
+    // Create new user
     const user = await User.create({
       fullName,
       username,
       password,
     });
 
-    // Loo JWT
+    // Create JWT
     const payload = {
       user: {
         id: user.id,

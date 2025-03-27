@@ -16,7 +16,9 @@ module.exports = function(req, res, next) {
 
   // Check if no token
   if (!token) {
-    return res.status(401).json({ msg: 'Autoriseerimine ebaõnnestus, token puudub' });
+    return res.status(401).json({
+      message: 'Authentication required'
+    });
   }
 
   try {
@@ -27,6 +29,8 @@ module.exports = function(req, res, next) {
     req.user = decoded.user;
     next();
   } catch (err) {
-    res.status(401).json({ msg: 'Token ei kehti' });
+    res.status(401).json({
+      message: 'Authentication required'
+    });
   }
 };
