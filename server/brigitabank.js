@@ -20,17 +20,31 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors({
+  origin: 'http://localhost:5000' // Teie frontendi aadress arenduses
+}));
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
-app.use(cors());
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/', (req, res) => {
   res.send('BrigitaBank API server is running');
+});
+
+// JWKS endpoint
+app.get('/banks/jwks', (req, res) => {
+  const keys = require('./config/keys');
+  res.json(keys.getJwks());
+});
+
+// JWKS endpoint
+app.get('/transactions/jwks', (req, res) => {
+  const keys = require('./config/keys');
+  res.json(keys.getJwks());
 });
 
 // API routes
@@ -41,10 +55,9 @@ app.use('/sessions', sessionsRoutes);
 app.use('/banks', banksRoutes);
 app.use('/transactions/b2b', b2bRoutes);
 
-// JWKS endpoint
-app.get('/banks/jwks', (req, res) => {
-  const keys = require('./config/keys');
-  res.json(keys.getJwks());
+// API marsruudid
+app.get('/api/data', (req, res) => {
+  res.json({ message: 'Tere frontendist!' });
 });
 
 // Serve static assets in production

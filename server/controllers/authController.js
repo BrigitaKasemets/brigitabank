@@ -119,3 +119,18 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ msg: 'Serveri viga - kasutaja info laadimine ebaõnnestus' });
   }
 };
+
+// kõik kasutajad
+exports.getAllUsers = async (req, res) => {
+  try {
+
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] }
+    });
+
+    res.json(users);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ msg: 'Serveri viga - kasutajate laadimine ebaõnnestus' });
+  }
+};
