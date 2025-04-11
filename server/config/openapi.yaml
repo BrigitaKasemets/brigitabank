@@ -38,6 +38,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     post:
       tags:
         - users
@@ -64,7 +66,23 @@ paths:
                     type: string
                     example: User registered successfully
         '400':
-          $ref: '#/components/responses/ValidationError'
+          description: Input validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        msg:
+                          type: string
+                        param:
+                          type: string
+                        location:
+                          type: string
         '409':
           description: User already exists
           content:
@@ -100,6 +118,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: User not found
 
@@ -120,6 +140,10 @@ paths:
       responses:
         '204':
           description: User deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Not authorized to delete this user
         '404':
           description: User not found
 
@@ -143,6 +167,8 @@ paths:
           description: Account created successfully
         '400':
           description: Invalid input data
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     get:
       tags:
         - accounts
@@ -159,6 +185,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: No accounts found
           content:
@@ -169,16 +197,6 @@ paths:
                   message:
                     type: string
                     example: "No accounts found"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Authentication required"
 
   /accounts/user/{userId}:
     get:
@@ -204,6 +222,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '403':
           description: Unauthorized access
         '404':
@@ -227,10 +247,13 @@ paths:
       responses:
         '204':
           description: Account deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '403':
           description: Unauthorized - can only delete your own accounts
         '404':
           description: Account not found
+
   # Transaction endpoints
   /transactions:
     get:
@@ -249,6 +272,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: No transactions found
           content:
@@ -277,51 +302,10 @@ paths:
           description: Transaction created successfully
         '400':
           description: Invalid input data
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '402':
           description: Insufficient funds
-
-  /transactions/{transactionId}:
-    get:
-      tags:
-        - transactions
-      summary: Get transaction by ID
-      description: Retrieve a specific transaction by ID
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: transactionId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Transaction found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transaction'
-        '404':
-          description: Transaction not found
-
-    delete:
-      tags:
-        - transactions
-      summary: Delete transaction
-      description: Delete a transaction (admin only)
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - name: transactionId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Transaction deleted successfully
-        '404':
-          description: Transaction not found
 
   # Session endpoints
   /sessions:
@@ -360,6 +344,24 @@ paths:
                         type: string
                       fullName:
                         type: string
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        msg:
+                          type: string
+                        param:
+                          type: string
+                        location:
+                          type: string
         '401':
           description: Invalid credentials
           content:
@@ -367,25 +369,19 @@ paths:
               schema:
                 type: object
 
-  /sessions/{sessionId}:
+  /sessions/current:
     delete:
       tags:
         - sessions
-      summary: Delete session
-      description: Logout and delete the current session
+      summary: Logout current user
+      description: Logout and invalidate the current user's session token
       security:
         - BearerAuth: [ ]
-      parameters:
-        - name: sessionId
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
-        '204':
-          description: Session terminated successfully
-        '404':
-          description: Session not found
+        '200':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   # Bank-to-bank endpoints
   /banks/transactions:
@@ -411,6 +407,8 @@ paths:
                 $ref: '#/components/schemas/B2BTransactionResponse'
         '400':
           description: Invalid JWT or signature
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: Account not found
 
@@ -449,6 +447,8 @@ paths:
                     owner:
                       type: string
                       example: "Bank Owner"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '502':
           description: Central Bank connectivity issue
           content:
@@ -491,6 +491,8 @@ paths:
                       prefix:
                         type: string
                         example: fbb
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '500':
           description: Registration failed
           content:
@@ -527,6 +529,8 @@ paths:
                   message:
                     type: string
                     example: Keys refreshed and registration updated
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '500':
           description: Failed to refresh keys
           content:
@@ -594,6 +598,8 @@ paths:
                   owner:
                     type: string
                     example: "Bank Owner"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: Bank not found
         '502':
@@ -882,12 +888,9 @@ components:
           schema:
             type: object
             properties:
-              status:
-                type: string
-                example: error
               message:
                 type: string
-                example: Authentication required
+                example: "Authentication required"
 
     ValidationError:
       description: Input validation error
@@ -908,4 +911,3 @@ components:
                       type: string
                     message:
                       type: string
-

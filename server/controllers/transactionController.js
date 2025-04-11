@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const centralBankApi = require('../utils/centralBankApi');
 const jwtUtils = require('../utils/jwtUtils');
 const { sequelize } = require('../config/db');
+const { Op } = require('sequelize');
 
 // Internal transaction (within the same bank)
 exports.createInternalTransaction = async (req, res) => {
@@ -210,5 +211,43 @@ exports.createExternalTransaction = async (req, res) => {
     await t.rollback();
     console.error('External transaction error:', err);
     res.status(500).json({ message: 'Server error occurred', error: err.message });
+  }
+};
+
+// Get all transactions for user
+exports.getMyTransactions = async (req, res) => {
+  try {
+    // Find accounts owned by the user
+    const accounts = await Account.findAll({
+      where: { userId: req.user.id },
+      attributes: ['accountNumber']
+    });
+
+    if (!accounts || accounts.length === 0) {
+      return res.status(404).json({ message: 'No accounts found' });
+    }
+
+    // Extract account numbers
+    const accountNumbers = accounts.map(acc => acc.accountNumber);
+
+    // Find transactions where user's accounts are involved
+    const transactions = await Transaction.findAll({
+      where: {
+        [Op.or]: [  // Use imported Op instead of sequelize.Op
+          { accountFrom: { [Op.in]: accountNumbers } },
+          { accountTo: { [Op.in]: accountNumbers } }
+        ]
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ message: 'No transactions found' });
+    }
+
+    res.json(transactions);
+  } catch (err) {
+    console.error('Get transactions error:', err);
+    res.status(500).json({ message: 'Server error occurred' });
   }
 };

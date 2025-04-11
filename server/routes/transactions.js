@@ -23,4 +23,5 @@ router.get('/:id', auth, (req, res) => {
   res.status(501).json({ msg: 'Not implemented yet' });
 });
 
+router.get('/', auth, transactionController.getMyTransactions);
 module.exports = router;
