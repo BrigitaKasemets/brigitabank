@@ -198,7 +198,7 @@ paths:
                 id: 1
                 accountNumber: "fbb123456789"
                 name: "Checking Account"
-                balance: 0
+                balance: 100
                 currency: "EUR"
                 userId: 1
                 createdAt: "2025-04-12T10:00:00Z"
@@ -207,10 +207,23 @@ paths:
           description: Invalid input data
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
     get:
       tags:
         - accounts
-      summary: Get all accounts
+      summary: Get all user's accounts
       description: Retrieve all accounts for the authenticated user
       security:
         - BearerAuth: [ ]
@@ -235,6 +248,19 @@ paths:
                   message:
                     type: string
                     example: "No accounts found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 
   /accounts/user/{userId}:
     get:
@@ -262,10 +288,21 @@ paths:
                   $ref: '#/components/schemas/Account'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          description: Unauthorized access
         '404':
           description: No accounts found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 
   /accounts/{accountNumber}:
     delete:

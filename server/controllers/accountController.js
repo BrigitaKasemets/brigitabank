@@ -21,53 +21,67 @@ exports.createAccount = async (req, res) => {
       userId
     });
 
-    res.status(201).json(account);
+    // Return 201 with the created account object
+    return res.status(201).json(account);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Bad request' });
+    }
+    if (err.name === 'UnauthorizedError') {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    return res.status(500).json({ message: 'Server error occurred' });
   }
 };
 
 // Get user's accounts
 exports.getMyAccounts = async (req, res) => {
   try {
+    // Check authentication first
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
     const accounts = await Account.findAll({
       where: { userId: req.user.id }
     });
 
     // Return 404 if no accounts found
     if (!accounts || accounts.length === 0) {
-      return res.status(404).json({
-        message: "No accounts found"
-      });
+      return res.status(404).json({ message: 'No accounts found' });
     }
 
-    res.json(accounts);
+    // Return accounts array directly as per the schema
+    return res.status(200).json(accounts);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    return res.status(500).json({ message: 'Server error occurred' });
   }
 };
 
 // Get accounts by user ID
 exports.getAccountsByUserId = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    // Check authentication first
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
 
+    const userId = req.params.userId;
     const accounts = await Account.findAll({
       where: { userId }
     });
 
     if (!accounts || accounts.length === 0) {
-      return res.status(404).json({
-        message: "No accounts found for this user"
-      });
+      return res.status(404).json({ message: 'No accounts found' });
     }
 
-    res.json(accounts);
+    // Return accounts array directly as per the schema
+    return res.status(200).json(accounts);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    return res.status(500).json({ message: 'Server error occurred' });
   }
 };
 
@@ -85,16 +99,16 @@ exports.getAccountOwnerName = async (req, res) => {
     });
 
     if (!account) {
-      return res.status(404).json({ msg: 'Account not found' });
+      return res.status(404).json({ message: 'Account not found' });
     }
 
-    res.json({
+    return res.status(200).json({
       accountNumber: account.accountNumber,
       ownerName: account.User.fullName
     });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    return res.status(500).json({ message: 'Server error occurred' });
   }
 };
 
@@ -121,7 +135,7 @@ exports.deleteAccount = async (req, res) => {
     // Delete the account
     await account.destroy();
 
-    // Return 204 status with no content
+    // Return 204 status with no content as specified in the OpenAPI spec
     return res.status(204).send();
   } catch (error) {
     console.error('Error deleting account:', error);
