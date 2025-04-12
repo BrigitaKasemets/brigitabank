@@ -14,11 +14,11 @@ exports.createAccount = async (req, res) => {
 
     // Create new account with the generated account number
     const account = await Account.create({
-      accountNumber,
       name,
+      accountNumber,
+      balance: 100,
       currency,
-      userId,
-      balance: 100.00
+      userId
     });
 
     res.status(201).json(account);
@@ -52,7 +52,6 @@ exports.getMyAccounts = async (req, res) => {
 // Get accounts by user ID
 exports.getAccountsByUserId = async (req, res) => {
   try {
-
     const userId = req.params.userId;
 
     const accounts = await Account.findAll({
@@ -116,15 +115,16 @@ exports.deleteAccount = async (req, res) => {
 
     // Check if the account belongs to the authenticated user
     if (account.userId !== req.user.id) {
-      return res.status(403).json({ message: 'Unauthorized - you can only delete your own accounts' });
+      return res.status(403).json({ message: 'Unauthorized - can only delete your own accounts' });
     }
 
     // Delete the account
     await account.destroy();
 
-    res.status(204).send();
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: 'Server error' });
+    // Return 204 status with no content
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };

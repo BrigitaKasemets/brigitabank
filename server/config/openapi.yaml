@@ -158,6 +158,19 @@ paths:
           description: Not authorized to delete this user
         '404':
           description: User not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 
   # Account endpoints
   /accounts:
