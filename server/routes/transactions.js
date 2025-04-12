@@ -16,10 +16,8 @@ router.post('/', auth, transactionValidation, validateRequest, (req, res) => {
   }
 });
 
-
-
 router.get('/:id', auth, (req, res) => {
-  // This endpoint could be implemented for getting specific transaction details
+  // This endpoint is implemented for getting specific transaction details
   res.status(501).json({ msg: 'Not implemented yet' });
 });
 

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User');
 const BlacklistedToken = require('../models/BlacklistedToken');
+const keys = require('../config/keys');
 
 // Register
 exports.register = async (req, res) => {
@@ -27,14 +28,13 @@ exports.register = async (req, res) => {
     const payload = {
       user: {
         id: user.id,
-        role: user.role,
       },
     };
 
     jwt.sign(
         payload,
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' },
+        keys.privateKey,
+        { algorithm: 'RS256', expiresIn: '1h' },
         (err, token) => {
           if (err) throw err;
           res.status(201).json({
@@ -45,7 +45,6 @@ exports.register = async (req, res) => {
               id: user.id,
               username: user.username,
               fullName: user.fullName,
-              role: user.role
             }
           });
         }
@@ -61,19 +60,25 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Kontrolli, kas kasutaja eksisteerib
+    // Check if user exists
     const user = await User.findOne({ where: { username } });
     if (!user) {
-      return res.status(401).json({ msg: 'Vigane kasutajanimi või parool' });
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid username or password'
+      });
     }
 
-    // Kontrolli parooli
+    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ msg: 'Vigane kasutajanimi või parool' });
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid username or password'
+      });
     }
 
-    // Loo JWT
+    // Create JWT
     const payload = {
       user: {
         id: user.id
@@ -82,8 +87,8 @@ exports.login = async (req, res) => {
 
     jwt.sign(
         payload,
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' },
+        keys.privateKey, // Instead of process.env.JWT_SECRET
+        { algorithm: 'RS256', expiresIn: '1h' }, // Add algorithm
         (err, token) => {
           if (err) throw err;
           res.json({
@@ -93,13 +98,18 @@ exports.login = async (req, res) => {
               id: user.id,
               username: user.username,
               fullName: user.fullName,
+              role: user.role
             }
           });
         }
     );
+
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Serveri viga - sisselogimine ebaõnnestus', err: err.message });
+    res.status(500).json({
+      status: 'error',
+      message: 'Server error - login failed'
+    });
   }
 };
 

@@ -1,6 +1,7 @@
-// server/middleware/auth.js (modified)
+// server/middleware/auth.js
 const jwt = require('jsonwebtoken');
 const BlacklistedToken = require('../models/BlacklistedToken');
+const keys = require('../config/keys');
 
 module.exports = async function(req, res, next) {
   // Get token from header - check both standard Authorization header and x-auth-token
@@ -32,8 +33,8 @@ module.exports = async function(req, res, next) {
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify token using the public key with RS256 algorithm
+    const decoded = jwt.verify(token, keys.publicKey, { algorithms: ['RS256'] });
 
     // Add user info to request
     req.user = decoded.user;
@@ -43,6 +44,7 @@ module.exports = async function(req, res, next) {
 
     next();
   } catch (err) {
+    console.error('Token verification error:', err.message);
     res.status(401).json({
       message: 'Authentication required'
     });

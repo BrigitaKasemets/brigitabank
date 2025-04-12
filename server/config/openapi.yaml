@@ -122,7 +122,6 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: User not found
-
     delete:
       tags:
         - users
@@ -135,11 +134,24 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: integer
+            type: integer
       responses:
-        '204':
+        '200':
           description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User successfully deleted"
+              example:
+                success: true
+                message: "User successfully deleted"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -165,6 +177,19 @@ paths:
       responses:
         '201':
           description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 1
+                accountNumber: "fbb123456789"
+                name: "Checking Account"
+                balance: 0
+                currency: "EUR"
+                userId: 1
+                createdAt: "2025-04-12T10:00:00Z"
+                updatedAt: "2025-04-12T10:00:00Z"
         '400':
           description: Invalid input data
         '401':
@@ -247,6 +272,16 @@ paths:
       responses:
         '204':
           description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+              example:
+                success: true
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -300,6 +335,21 @@ paths:
       responses:
         '201':
           description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+              example:
+                id: 1
+                accountFrom: "fbb123456789"
+                accountTo: "fbb987654321"
+                amount: 100.50
+                currency: "EUR"
+                explanation: "Payment for services"
+                status: "completed"
+                type: "internal"
+                createdAt: "2025-04-12T10:30:00Z"
+                updatedAt: "2025-04-12T10:30:00Z"
         '400':
           description: Invalid input data
         '401':
@@ -326,24 +376,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  token:
-                    type: string
-                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                  user:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                      username:
-                        type: string
-                      fullName:
-                        type: string
+                $ref: '#/components/schemas/Session'
+              example:
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTYxMjg2NTc2MSwiZXhwIjoxNjEyOTUyMTYxfQ.example-token"
+                user:
+                  id: 1
+                  username: "user@brigitabank.com"
+                  fullName: "Demo Kasutaja"
+                  createdAt: "2025-04-01T10:30:00Z"
+                  updatedAt: "2025-04-01T10:30:00Z"
         '400':
           description: Invalid input data
           content:
@@ -363,11 +404,15 @@ paths:
                         location:
                           type: string
         '401':
-          description: Invalid credentials
+          description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required"
 
   /sessions/current:
     delete:
@@ -380,8 +425,35 @@ paths:
       responses:
         '200':
           description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                success: true
+                message: "Session successfully invalidated"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Session not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 
   # Bank-to-bank endpoints
   /banks/transactions:
@@ -411,6 +483,19 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: Account not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 
   /banks/external:
     get:
@@ -622,9 +707,6 @@ components:
           type: string
         fullName:
           type: string
-        role:
-          type: string
-          enum: [user, admin]
         createdAt:
           type: string
           format: date-time
@@ -635,7 +717,6 @@ components:
         - id
         - username
         - fullName
-        - role
 
     UserInput:
       type: object

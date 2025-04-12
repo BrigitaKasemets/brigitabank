@@ -16,7 +16,6 @@ const initializeDatabase = async () => {
       fullName: 'Demo Kasutaja',
       username: 'user@brigitabank.com',
       password: 'user123',  // Raw password, hook will hash it
-      role: 'user'
     });
 
     // Create accounts for demo user

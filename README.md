@@ -38,7 +38,7 @@ BrigitaBank is a comprehensive online banking application that supports account 
 
 4. Generate RSA keys for signing transactions:
 ```bash
-    node utils/generateKeys.js
+    node ./server/utils/generateKeys.js
 ```
 5. Initialize the database:
 ```bash
