@@ -320,7 +320,7 @@ paths:
             type: string
           description: "The account number with bank prefix (e.g., 'abc1234567890')"
       responses:
-        '204':
+        '200':
           description: Account deleted successfully
           content:
             application/json:
@@ -338,6 +338,8 @@ paths:
           description: Unauthorized - can only delete your own accounts
         '404':
           description: Account not found
+        '500':
+            description: Internal server error
 
   # Transaction endpoints
   /transactions:

@@ -115,9 +115,13 @@ exports.getAccountOwnerName = async (req, res) => {
 // Delete account by account number
 exports.deleteAccount = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required - please log in' });
+    }
+
     const { accountNumber } = req.params;
 
-    // Find the account
     const account = await Account.findOne({
       where: { accountNumber }
     });
@@ -135,10 +139,10 @@ exports.deleteAccount = async (req, res) => {
     // Delete the account
     await account.destroy();
 
-    // Return 204 status with no content as specified in the OpenAPI spec
-    return res.status(204).send();
+    // Return 200 status with success message
+    return res.status(200).json({ message: 'Account successfully deleted' });
   } catch (error) {
     console.error('Error deleting account:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error occurred while deleting the account' });
   }
 };
