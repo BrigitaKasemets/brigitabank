@@ -1,13 +1,41 @@
-// Add to server/config/keys.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
-const privateKeyPath = path.join(__dirname, 'keys', 'private.pem');
-const publicKeyPath = path.join(__dirname, 'keys', 'public.pem');
+// Võtmete tee
+const keysDir = path.join(__dirname, 'keys');
+const privateKeyPath = path.join(keysDir, 'private.pem');
+const publicKeyPath = path.join(keysDir, 'public.pem');
 
-// Read keys if they exist
+// ⬇️ DEFINEERIME puuduva funktsiooni
+function generateNewKeys() {
+  // Veendu, et 'keys' kaust eksisteerib
+  if (!fs.existsSync(keysDir)) {
+    fs.mkdirSync(keysDir, { recursive: true });
+  }
+
+  // Genereeri RSA võti
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+      type: 'spki',
+      format: 'pem'
+    },
+    privateKeyEncoding: {
+      type: 'pkcs8',
+      format: 'pem'
+    }
+  });
+
+  // Salvesta võtmed failidesse
+  fs.writeFileSync(privateKeyPath, privateKey);
+  fs.writeFileSync(publicKeyPath, publicKey);
+
+  return { privateKey, publicKey };
+}
+
+// Loe võtmed, kui olemas
 let privateKey, publicKey;
 try {
   privateKey = fs.readFileSync(privateKeyPath, 'utf8');
@@ -19,22 +47,13 @@ try {
   publicKey = keys.publicKey;
 }
 
-// Export keys
+// Ekspordi võtmed
 module.exports.privateKey = privateKey;
 module.exports.publicKey = publicKey;
 
-// Generate JWKS from public key
+// JWKS genereerimine
 module.exports.getJwks = () => {
   try {
-    // Parse the public key
-    const pemHeader = '-----BEGIN PUBLIC KEY-----';
-    const pemFooter = '-----END PUBLIC KEY-----';
-    const pemContents = publicKey
-        .replace(pemHeader, '')
-        .replace(pemFooter, '')
-        .replace(/\s/g, '');
-
-    // Create modulus and exponent components
     const publicKeyObject = crypto.createPublicKey({
       key: publicKey,
       format: 'pem'
@@ -42,10 +61,8 @@ module.exports.getJwks = () => {
 
     const keyData = publicKeyObject.export({ format: 'jwk' });
 
-    // Create a key ID if it doesn't exist
     const kid = uuidv4();
 
-    // Return JWKS format
     return {
       keys: [
         {
