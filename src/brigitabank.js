@@ -1,6 +1,7 @@
 // server/brigitabank.js (Updated)
 require('dotenv').config();
 const express = require('express');
+const keys = require('./config/keys');
 const cors = require('cors');
 const path = require('path');
 const swaggerSpec = require('./config/swagger');
@@ -19,6 +20,7 @@ const banksRoutes = require('./routes/banks');
 const b2bRoutes = require('./routes/b2b');
 const rolesRoutes = require('./routes/roles'); // New roles routes
 const currenciesRoutes = require('./routes/currencies'); // New currencies routes
+
 
 // Initialize Express app
 const app = express();
@@ -45,6 +47,10 @@ app.get('/', (req, res) => {
 // JWKS endpoints
 app.get('/banks/jwks', (req, res) => {
   const keys = require('./config/keys');
+  res.json(keys.getJwks());
+});
+
+app.get('/jwks', (req, res) => {
   res.json(keys.getJwks());
 });
 
