@@ -28,7 +28,7 @@ BrigitaBank is a comprehensive online banking application that supports account 
 1. Clone the repository:
 ```bash
     git clone https://github.com/BrigitaKasemets/brigitabank.git
-    cd brigitabank/server
+    cd brigitabank/src
 ```
 2. Install dependencies:
 ```bash
@@ -38,7 +38,7 @@ BrigitaBank is a comprehensive online banking application that supports account 
 
 4. Generate RSA keys for signing transactions:
 ```bash
-    node ./server/utils/generateKeys.js
+    node ./src/utils/generateKeys.js
 ```
 5. Initialize the database:
 ```bash
@@ -56,7 +56,7 @@ BrigitaBank is a comprehensive online banking application that supports account 
 
 8. Run the account prefix migration script:
 ```bash
-    cd server
+    cd src
     node utils/accountPrefixMigration.js
 ```
 

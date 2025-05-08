@@ -2,12 +2,12 @@
   "name": "bank-api",
   "version": "1.0.0",
   "description": "Internet pank pankadevahelise suhtluse võimalusega",
-  "main": "server/brigitabank.js",
+  "main": "src/brigitabank.js",
   "scripts": {
-    "start": "node server/brigitabank.js",
-    "dev": "nodemon -e js,json,yaml server/brigitabank.js",
+    "start": "node src/brigitabank.js",
+    "dev": "nodemon -e js,json,yaml src/brigitabank.js",
     "test": "jest",
-    "init-db": "node server/config/init-db.js"
+    "init-db": "node src/config/init-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

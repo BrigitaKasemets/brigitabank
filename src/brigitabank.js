@@ -1,3 +1,4 @@
+// server/brigitabank.js (Updated)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -6,6 +7,9 @@ const swaggerSpec = require('./config/swagger');
 const swaggerUi = require('swagger-ui-express');
 const { setupMaintenanceTasks } = require('./utils/maintenanceTasks');
 
+// Initialize database models and relationships
+require('./models/index');
+
 // Import route files
 const usersRoutes = require('./routes/users');
 const accountsRoutes = require('./routes/accounts');
@@ -13,6 +17,8 @@ const transactionsRoutes = require('./routes/transactions');
 const sessionsRoutes = require('./routes/sessions');
 const banksRoutes = require('./routes/banks');
 const b2bRoutes = require('./routes/b2b');
+const rolesRoutes = require('./routes/roles'); // New roles routes
+const currenciesRoutes = require('./routes/currencies'); // New currencies routes
 
 // Initialize Express app
 const app = express();
@@ -36,13 +42,12 @@ app.get('/', (req, res) => {
   res.send('BrigitaBank API server is running');
 });
 
-// JWKS endpoint
+// JWKS endpoints
 app.get('/banks/jwks', (req, res) => {
   const keys = require('./config/keys');
   res.json(keys.getJwks());
 });
 
-// JWKS endpoint
 app.get('/transactions/jwks', (req, res) => {
   const keys = require('./config/keys');
   res.json(keys.getJwks());
@@ -55,10 +60,17 @@ app.use('/transactions', transactionsRoutes);
 app.use('/sessions', sessionsRoutes);
 app.use('/banks', banksRoutes);
 app.use('/transactions/b2b', b2bRoutes);
+app.use('/roles', rolesRoutes); // Add roles routes
+app.use('/currencies', currenciesRoutes); // Add currencies routes
 
-// API marsruudid
-app.get('/api/data', (req, res) => {
-  res.json({ message: 'Tere frontendist!' });
+// API endpoint for system information
+app.get('/api/system', (req, res) => {
+  res.json({
+    version: '1.0',
+    name: 'BrigitaBank',
+    description: 'Bank interoperability system',
+    bankPrefix: process.env.BANK_PREFIX || 'N/A'
+  });
 });
 
 // Serve static assets in production
