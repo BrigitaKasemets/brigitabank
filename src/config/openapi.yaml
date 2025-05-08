@@ -645,6 +645,22 @@ paths:
                     type: string
                     example: Registration failed
 
+
+  /banks/jwks:
+    get:
+      tags:
+        - banks
+      summary: Get JWKS
+      description: Retrieve the JSON Web Key Set containing the bank's public key(s) used for validating transaction JWT signatures
+      responses:
+        '200':
+          description: JWKS retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+
+
   /banks/external/{prefix}:
     get:
       tags:
@@ -933,6 +949,53 @@ components:
           description: Full name of the receiving account owner
       required:
         - receiverName
+
+    JWKS:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              kty:
+                type: string
+                description: "The key type (e.g., RSA, EC)"
+              kid:
+                type: string
+                description: "Key ID, used to match the key with the signature"
+              use:
+                type: string
+                description: "The intended use of the key (e.g., sig for signing)"
+              alg:
+                type: string
+                description: "The algorithm used with the key (e.g., RS256)"
+              n:
+                type: string
+                description: "The modulus for RSA keys (used with kty: RSA)"
+              e:
+                type: string
+                description: "The exponent for RSA keys (used with kty: RSA)"
+              x5c:
+                type: array
+                items:
+                  type: string
+                description: "X.509 certificate chain, base64 encoded"
+              x5t:
+                type: string
+                description: "X.509 certificate thumbprint (SHA-1)"
+              "x5t#S256":
+                type: string
+                description: "X.509 certificate thumbprint (SHA-256)"
+            required:
+              - kty
+              - kid
+              - use
+              - alg
+              - n
+              - e
+      required:
+        - keys
 
   responses:
     UnauthorizedError:
